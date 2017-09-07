@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">MiscaClient</string>
+    <string name="store_pass">fliszt2000</string>
+    <string name="QSocketService_Label">Qumodo SSL/TLS Socket Service</string>
+</resources>
