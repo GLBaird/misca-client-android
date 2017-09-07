@@ -9,7 +9,7 @@ import android.util.Log;
 
 import org.qumodo.services.QTCPSocketService;
 
-public class QMiscaClientApplication extends Application {
+public class    QMiscaClientApplication extends Application {
 
     private static final int port = 9500;
     private static final String hostname = "192.168.0.19";

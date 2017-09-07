@@ -3,7 +3,7 @@ package org.qumodo.network;
 import android.content.Context;
 import android.util.Log;
 
-import org.qumodo.miscaclient.R;
+import org.qumodo.R;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
