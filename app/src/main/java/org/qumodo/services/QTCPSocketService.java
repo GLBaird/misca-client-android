@@ -23,6 +23,7 @@ public class QTCPSocketService extends Service implements Runnable, QClientSocke
     public static final String INTENT_KEY_ERROR = "org.qumodo.MiscaClient.QTCPSocketService.key.ERROR";
     public static final String ACTION_SEND_MESSAGE = "org.qumodo.MiscaClient.QTCPSocketService.action.SEND_MESSAGE";
     public static final String ACTION_CLOSE_SOCKET = "org.qumodo.MiscaClient.QTCPSocketService.action.CLOSE_SOCKET";
+    public static final String ACTION_RESTART_SOCKET = "org.qumodo.MiscaClient.QTCPSocketService.action.RESTART_SOCKET";
     public static final String DELEGATE_RECEIVED_MESSAGE = "org.qumodo.MiscaClient.QSocketServer.delegate.RECEIVED_MESSAGE";
     public static final String DELEGATE_SEND_ERROR = "org.qumodo.MiscaClient.QSocketServer.delegate.SEND_ERROR";
     public static final String DELEGATE_SOCKET_ERROR = "org.qumodo.MiscaClient.QSocketServer.delegate.SOCKET_ERROR";
@@ -56,6 +57,8 @@ public class QTCPSocketService extends Service implements Runnable, QClientSocke
                 }
             } else if (action.equals(ACTION_CLOSE_SOCKET)){
                 tearDownSocket();
+            } else if (action.equals(ACTION_RESTART_SOCKET)) {
+
             }
         }
     };
@@ -103,6 +106,7 @@ public class QTCPSocketService extends Service implements Runnable, QClientSocke
         IntentFilter filter = new IntentFilter();
         filter.addAction(ACTION_SEND_MESSAGE);
         filter.addAction(ACTION_CLOSE_SOCKET);
+        filter.addAction(ACTION_RESTART_SOCKET);
         registerReceiver(receiver, filter);
 
         return Service.START_REDELIVER_INTENT;

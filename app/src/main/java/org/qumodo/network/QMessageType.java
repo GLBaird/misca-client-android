@@ -51,7 +51,7 @@ public enum QMessageType {
         }
     }
 
-    static QMessageType conform(int val) {
+    public static QMessageType conform(int val) {
         for (QMessageType type : QMessageType.values()) {
             if (type.value == val) {
                 return type;

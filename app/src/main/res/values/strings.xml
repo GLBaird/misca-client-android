@@ -2,4 +2,7 @@
     <string name="app_name">MiscaClient</string>
     <string name="store_pass">fliszt2000</string>
     <string name="QSocketService_Label">Qumodo SSL/TLS Socket Service</string>
+
+    <string name="fontFamilyRoboto">Roboto</string>
+    <string name="user_icon">string_qmiscagroup_list_user_icon_description</string>
 </resources>

@@ -4,12 +4,11 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 
-import org.qumodo.R;
-import org.qumodo.miscaclient.fragments.QMiscsaGroupsFragment.OnListFragmentInteractionListener;
-import org.qumodo.miscaclient.fragments.dummy.DummyContent.DummyItem;
-
+import org.qumodo.data.models.Group;
+import org.qumodo.miscaclient.fragments.QMiscaGroupsListFragment.OnListFragmentInteractionListener;
+import org.qumodo.miscaclient.dataProviders.GroupsContentProvider.DummyItem;
+import org.qumodo.miscaclient.R;
 import java.util.List;
 
 /**
@@ -17,12 +16,12 @@ import java.util.List;
  * specified {@link OnListFragmentInteractionListener}.
  * TODO: Replace the implementation with code for your data type.
  */
-public class MyQMiscsaGroupRecyclerViewAdapter extends RecyclerView.Adapter<MyQMiscsaGroupRecyclerViewAdapter.ViewHolder> {
+public class MyQMiscaGroupsListRecyclerViewAdapter extends RecyclerView.Adapter<MyQMiscaGroupsListRecyclerViewAdapter.ViewHolder> {
 
-    private final List<DummyItem> mValues;
+    private final List<Group> mValues;
     private final OnListFragmentInteractionListener mListener;
 
-    public MyQMiscsaGroupRecyclerViewAdapter(List<DummyItem> items, OnListFragmentInteractionListener listener) {
+    public MyQMiscaGroupsListRecyclerViewAdapter(List<Group> items, OnListFragmentInteractionListener listener) {
         mValues = items;
         mListener = listener;
     }
@@ -30,15 +29,15 @@ public class MyQMiscsaGroupRecyclerViewAdapter extends RecyclerView.Adapter<MyQM
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.fragment_qmiscsagroups, parent, false);
+                .inflate(R.layout.fragment_misca_group, parent, false);
         return new ViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(final ViewHolder holder, int position) {
         holder.mItem = mValues.get(position);
-        holder.mIdView.setText(mValues.get(position).id);
-        holder.mContentView.setText(mValues.get(position).content);
+//        holder.mIdView.setText(mValues.get(position).id);
+//        holder.mContentView.setText(mValues.get(position).content);
 
         holder.mView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -59,20 +58,20 @@ public class MyQMiscsaGroupRecyclerViewAdapter extends RecyclerView.Adapter<MyQM
 
     public class ViewHolder extends RecyclerView.ViewHolder {
         public final View mView;
-        public final TextView mIdView;
-        public final TextView mContentView;
-        public DummyItem mItem;
+//        public final TextView mIdView;
+//        public final TextView mContentView;
+        public Group mItem;
 
         public ViewHolder(View view) {
             super(view);
             mView = view;
-            mIdView = (TextView) view.findViewById(R.id.id);
-            mContentView = (TextView) view.findViewById(R.id.content);
+//            mIdView = (TextView) view.findViewById(R.id.id);
+//            mContentView = (TextView) view.findViewById(R.id.content);
         }
 
         @Override
         public String toString() {
-            return super.toString() + " '" + mContentView.getText() + "'";
+            return super.toString();
         }
     }
 }

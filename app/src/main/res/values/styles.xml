@@ -1,11 +1,83 @@
 <resources>
 
     <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+    <style name="AppTheme" parent="android:Theme.Material.Light">
         <!-- Customize your theme here. -->
-        <item name="colorPrimary">@color/colorPrimary</item>
-        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
-        <item name="colorAccent">@color/colorAccent</item>
+        <item name="android:fontFamily">@string/fontFamilyRoboto</item>
+        <item name="android:statusBarColor">@color/colorBlack</item>
+        <item name="android:colorPrimary">@color/colorPrimary</item>
+        <item name="android:colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="android:textColorPrimary">@color/colorWhite</item>
+        <item name="android:navigationBarColor">@color/colorBlack</item>
+        <item name="android:colorAccent">@color/colorAccent</item>
+        <item name="android:windowBackground">@color/colorWhite</item>
+        <item name="android:textColor">@color/colorText</item>
     </style>
+
+    <style name="QTextStyle">
+        <item name="android:fontFamily">@string/fontFamilyRoboto</item>
+        <item name="android:textStyle">normal</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">@color/colorText</item>
+        <item name="android:letterSpacing">0</item>
+        <item name="android:lineSpacingExtra">20sp</item>
+        <item name="android:layout_gravity">left</item>
+    </style>
+
+    <style name="QListTextTitle" parent="QTextStyle">
+        <item name="android:textSize">16sp</item>
+        <item name="android:lineSpacingExtra">24sp</item>
+    </style>
+
+    <style name="QListTextSubTitle" parent="QListTextTitle">
+        <item name="android:textColor">@color/colorTextLight</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:lineSpacingExtra">20sp</item>
+    </style>
+
+    <style name="QListTextDate" parent="QTextStyle">
+        <item name="android:textColor">@color/colorTextLight</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:lineSpacingExtra">16sp</item>
+    </style>
+
+    <style name="QListMessageBubble" parent="QTextStyle">
+        <item name="android:textColor">@color/colorWhite</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:lineSpacingExtra">0sp</item>
+        <item name="android:layout_gravity">end</item>
+        <item name="android:gravity">center</item>
+    </style>
+
+    <style name="QMenuText" parent="QListTextSubTitle">
+        <!-- SAME -->
+    </style>
+
+    <style name="QCardTitle" parent="QTextStyle">
+        <item name="android:layout_gravity">center_horizontal</item>
+        <item name="android:textColor">@color/colorCardText</item>
+        <item name="android:textSize">24sp</item>
+        <item name="android:lineSpacingExtra">32sp</item>
+    </style>
+
+    <style name="QCardText" parent="QTextStyle">
+        <item name="android:layout_gravity">center_horizontal</item>
+        <item name="android:textColor">@color/colorCardText</item>
+        <item name="android:textSize">14sp</item>
+    </style>
+
+    <style name="QButtonTextBlue" parent="QTextStyle">
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/colorWhite</item>
+        <item name="android:lineSpacingExtra">16sp</item>
+    </style>
+
+    <style name="QFormLabel" parent="QTextStyle">
+        <item name="android:textColor">@color/colorFormLabel</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:lineSpacingExtra">16sp</item>
+    </style>
+
+
 
 </resources>

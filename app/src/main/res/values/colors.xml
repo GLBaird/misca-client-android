@@ -1,6 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#3F51B5</color>
-    <color name="colorPrimaryDark">#303F9F</color>
-    <color name="colorAccent">#FF4081</color>
+    <color name="colorPrimary">#000000</color>
+    <color name="colorPrimaryDark">#000000</color>
+    <color name="colorAccent">#0091ea</color>
+    <color name="colorBlack">#000000</color>
+    <color name="colorWhite">#FFFFFF</color>
+    <color name="colorText">#DE000000</color>
+    <color name="colorRed">#FFFF1744</color>
+    <color name="colorGreen">#FF00E676</color>
+    <color name="colorTextLight">#8A000000</color>
+    <color name="colorCardText">#FF263238</color>
+    <color name="colorFormLabel">#8A000000</color>
+    <color name="colorFormFieldPlaceholder">#61000000</color>
+    <color name="colorFormFieldActive">#DE000000</color>
+    <color name="colorFormDiverLine">#FF0091EA</color>
+    <color name="colorButtonBlue">#FF0091EA</color>
+    <color name="colorListSeparator">#FFECEFF1</color>
 </resources>

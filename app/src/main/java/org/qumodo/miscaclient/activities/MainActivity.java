@@ -1,12 +1,12 @@
-package org.qumodo.miscaclient;
+package org.qumodo.miscaclient.activities;
 
-import android.support.v7.app.AppCompatActivity;
+import android.app.Activity;
 import android.os.Bundle;
 import android.util.Log;
 
-import org.qumodo.R;
+import org.qumodo.miscaclient.R;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends Activity {
 
     private static final String LOG_TAG = "MAIN_ACTIVITY";
 

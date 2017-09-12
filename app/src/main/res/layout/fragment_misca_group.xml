@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="0dp">
+
+    <org.qumodo.miscaclient.views.QMiscaListSquareImageView
+        android:id="@+id/user_icon"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentStart="true"
+        android:contentDescription="@string/user_icon"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_marginTop="@dimen/list_margin"
+        android:layout_marginStart="@dimen/list_margin"
+        android:layout_marginBottom="@dimen/list_margin"
+        android:background="@color/colorTextLight"
+        android:visibility="invisible"/>
+    
+    <ProgressBar
+        android:id="@+id/user_icon_preloader"
+        style="@style/Widget.AppCompat.ProgressBar"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentStart="true"
+        android:layout_marginTop="@dimen/list_margin"
+        android:layout_marginLeft="@dimen/list_margin"
+        android:visibility="visible"/>
+
+    <LinearLayout
+        android:id="@+id/group_details"
+        android:layout_alignParentTop="true"
+        android:layout_toEndOf="@+id/user_icon_preloader"
+        android:layout_toStartOf="@+id/group_info"
+        android:layout_marginTop="@dimen/list_margin"
+        android:layout_marginStart="@dimen/text_margin_h"
+        android:layout_marginEnd="@dimen/text_margin_h"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/group_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            style="@style/QListTextTitle"
+            android:ellipsize="end"
+            android:text="Tony Stark"
+            android:lines="1"/>
+
+        <TextView
+            android:id="@+id/group_message"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            style="@style/QListTextSubTitle"
+            android:ellipsize="end"
+            android:lines="1"
+            android:text="Cool, thanks" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/group_info"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginTop="@dimen/list_margin"
+        android:layout_marginEnd="@dimen/list_margin"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="end|top"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/message_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            style="@style/QListTextDate"
+            android:text="5:09 PM"
+            android:layout_marginBottom="3dp"/>
+
+        <TextView
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            style="@style/QListMessageBubble"
+            android:background="@drawable/green_circle"
+            android:text="1"/>
+
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/colorListSeparator"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentEnd="true"/>
+
+</RelativeLayout>
