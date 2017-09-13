@@ -7,7 +7,10 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.util.Log;
 
+import org.qumodo.data.DataManager;
+import org.qumodo.data.MediaLoader;
 import org.qumodo.miscaclient.dataProviders.GroupsContentProvider;
+import org.qumodo.miscaclient.dataProviders.MessageContentProvider;
 import org.qumodo.services.QTCPSocketService;
 
 public class    QMiscaClientApplication extends Application {
@@ -60,6 +63,7 @@ public class    QMiscaClientApplication extends Application {
     }
 
     private void setupDataProviders() {
+        MediaLoader.setContext(getApplicationContext());
         GroupsContentProvider.setup(getApplicationContext());
     }
 

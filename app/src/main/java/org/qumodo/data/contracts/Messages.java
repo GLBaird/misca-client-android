@@ -24,13 +24,13 @@ public class Messages {
 
     public static final String SQL_CREATE_ENTRIES =
             "CREATE TABLE " + MessagesEntry.TABLE_NAME + " (" +
-                    MessagesEntry._ID + " INTEGER PRIMARY KEY," +
+                    MessagesEntry._ID + " TEXT PRIMARY KEY," +
                     MessagesEntry.COLUMN_NAME_FROM_ID + " TEXT," +
                     MessagesEntry.COLUMN_NAME_GROUP_ID + " TEXT," +
                     MessagesEntry.COLUMN_NAME_TS + " INT," +
-                    MessagesEntry.COLUMN_NAME_TYPE + " TEXT," +
+                    MessagesEntry.COLUMN_NAME_TYPE + " INT," +
                     MessagesEntry.COLUMN_NAME_DATA + " TEXT," +
-                    MessagesEntry.COLUMN_NAME_VIEWED + " TEXT," +
+                    MessagesEntry.COLUMN_NAME_VIEWED + " INT," +
                     "FOREIGN KEY (" +
                             MessagesEntry.COLUMN_NAME_FROM_ID +
                         ") REFERENCES " +

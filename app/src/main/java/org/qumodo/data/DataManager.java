@@ -3,6 +3,7 @@ package org.qumodo.data;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.util.Log;
 
 import org.qumodo.data.contracts.Groups;
 import org.qumodo.data.contracts.Messages;
@@ -33,6 +34,8 @@ public class DataManager {
                 Groups.GroupsEntry.COLUMN_NAME_GROUP_NAME + " ASC, " +
                 Groups.GroupsEntry.COLUMN_NAME_CREATED_TS + " ASC"
         );
+
+        Log.d("@@@", "HOW MANY >>>>" + results.getCount());
 
         ArrayList<Group> groups = new ArrayList<>(results.getCount());
 
@@ -165,6 +168,19 @@ public class DataManager {
         }
         result.close();
         return message;
+    }
+
+    public int unreadMessagesInGroup(String groupID) {
+        SQLiteDatabase db = helper.getReadableDatabase();
+        String query = "SELECT Count(*) FROM " + Messages.MessagesEntry.TABLE_NAME +
+                " WHERE " + Messages.MessagesEntry.COLUMN_NAME_GROUP_ID + " = ? " +
+                "AND " + Messages.MessagesEntry.COLUMN_NAME_VIEWED + " = 0";
+        String[] args = {groupID};
+        Cursor result = db.rawQuery(query, args);
+        result.moveToFirst();
+        int value = result.getInt(0);
+        result.close();
+        return value;
     }
 
 }

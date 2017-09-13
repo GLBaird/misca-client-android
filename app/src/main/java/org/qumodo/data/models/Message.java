@@ -64,7 +64,7 @@ public class Message {
 
     private User fromUser;
     public User getFrom() {
-        if (fromID == null) {
+        if (fromUser == null) {
             DataManager dm = new DataManager(appContext);
             fromUser = dm.getUser(fromID);
         }
@@ -93,6 +93,10 @@ public class Message {
 
     public String getSentAsLong() {
         return getSent(DateFormat.LONG);
+    }
+
+    public String getSentAsTime() {
+        return DateFormat.getTimeInstance(DateFormat.SHORT).format(sent);
     }
 
     public String getSent(int style) {

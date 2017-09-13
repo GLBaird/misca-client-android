@@ -37,6 +37,11 @@ public class MessageContentProvider {
         }
     }
 
+    public static int unreadMessagesInGroup(Context context, String groupID) {
+        DataManager dm = new DataManager(context);
+        return dm.unreadMessagesInGroup(groupID);
+    }
+
     private static void addItem(Message item) {
         ITEMS.add(item);
         ITEM_MAP.put(item.getId(), item);

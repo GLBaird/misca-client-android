@@ -1,6 +1,7 @@
 package org.qumodo.miscaclient.dataProviders;
 
 import android.content.Context;
+import android.util.Log;
 
 import org.qumodo.data.DataManager;
 import org.qumodo.data.models.Group;
@@ -31,6 +32,7 @@ public class GroupsContentProvider {
     public static void setup(Context context){
         DataManager dm = new DataManager(context);
         List<Group> vals = dm.getGroups();
+        Log.d("????", ">>> WHAT "+vals);
         for (Group val: vals) {
             addItem(val);
         }

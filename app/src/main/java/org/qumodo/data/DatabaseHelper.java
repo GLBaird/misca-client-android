@@ -3,6 +3,7 @@ package org.qumodo.data;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
 
 import org.qumodo.data.contracts.Groups;
 import org.qumodo.data.contracts.Messages;
@@ -27,10 +28,17 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.execSQL(Messages.SQL_CREATE_ENTRIES);
     }
 
+    private void runRawQuery(String query, SQLiteDatabase db) {
+        String[] items = query.split(";");
+        for (String item : items) {
+            db.execSQL(item);
+        }
+    }
+
     private void loadSampleData(SQLiteDatabase db) {
-        db.execSQL(Users.SQL_SAMPLE_DATA(applicationContext));
-        db.execSQL(Groups.SQL_SAMPLE_DATA(applicationContext));
-        db.execSQL(Messages.SQL_SAMPLE_DATA(applicationContext));
+        runRawQuery(Users.SQL_SAMPLE_DATA(applicationContext), db);
+        runRawQuery(Groups.SQL_SAMPLE_DATA(applicationContext), db);
+        runRawQuery(Messages.SQL_SAMPLE_DATA(applicationContext), db);
     }
 
     private void migrateData(SQLiteDatabase db) {

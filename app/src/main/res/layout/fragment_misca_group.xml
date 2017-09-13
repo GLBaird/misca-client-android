@@ -14,7 +14,6 @@
         android:layout_marginTop="@dimen/list_margin"
         android:layout_marginStart="@dimen/list_margin"
         android:layout_marginBottom="@dimen/list_margin"
-        android:background="@color/colorTextLight"
         android:visibility="invisible"/>
     
     <ProgressBar
@@ -80,6 +79,7 @@
             android:layout_marginBottom="3dp"/>
 
         <TextView
+            android:id="@+id/message_bubble"
             android:layout_width="20dp"
             android:layout_height="20dp"
             style="@style/QListMessageBubble"
