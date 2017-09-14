@@ -9,9 +9,13 @@ import android.util.Log;
 
 import org.qumodo.data.DataManager;
 import org.qumodo.data.MediaLoader;
+import org.qumodo.data.models.Group;
+import org.qumodo.data.models.GroupListItem;
 import org.qumodo.miscaclient.dataProviders.GroupsContentProvider;
 import org.qumodo.miscaclient.dataProviders.MessageContentProvider;
 import org.qumodo.services.QTCPSocketService;
+
+import java.util.List;
 
 public class    QMiscaClientApplication extends Application {
 
@@ -68,7 +72,6 @@ public class    QMiscaClientApplication extends Application {
     }
 
     private void startTCPSocket() {
-        Log.d("MAIN APP", "Launch Service");
         Intent socketService = new Intent(this, QTCPSocketService.class);
         socketService.putExtra(QTCPSocketService.INTENT_KEY_HOSTNAME, hostname);
         socketService.putExtra(QTCPSocketService.INTENT_KEY_PORT, port);

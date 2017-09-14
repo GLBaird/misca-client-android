@@ -9,6 +9,7 @@ import org.qumodo.data.contracts.Groups;
 import org.qumodo.data.contracts.Messages;
 import org.qumodo.data.contracts.Users;
 import org.qumodo.data.models.Group;
+import org.qumodo.data.models.GroupListItem;
 import org.qumodo.data.models.Message;
 import org.qumodo.data.models.User;
 
@@ -35,8 +36,6 @@ public class DataManager {
                 Groups.GroupsEntry.COLUMN_NAME_CREATED_TS + " ASC"
         );
 
-        Log.d("@@@", "HOW MANY >>>>" + results.getCount());
-
         ArrayList<Group> groups = new ArrayList<>(results.getCount());
 
         while (results.moveToNext()) {
@@ -44,6 +43,57 @@ public class DataManager {
         }
 
         results.close();
+        db.close();
+        return groups;
+    }
+
+    public List<GroupListItem> getAllGroupDataForListView() {
+        String gTN = Groups.GroupsEntry.TABLE_NAME + ".";
+        String mTN = Messages.MessagesEntry.TABLE_NAME + ".";
+        String unreadColumn = "unread";
+
+        String query =
+            "SELECT " +
+                    gTN + Groups.GroupsEntry._ID + ", " +
+                    gTN + Groups.GroupsEntry.COLUMN_NAME_GROUP_NAME + ", " +
+                    mTN + Messages.MessagesEntry.COLUMN_NAME_FROM_ID + ", " +
+                    mTN + Messages.MessagesEntry.COLUMN_NAME_DATA + ", " +
+                    mTN + Messages.MessagesEntry.COLUMN_NAME_TYPE + ", " +
+                    mTN + Messages.MessagesEntry.COLUMN_NAME_VIEWED + ", " +
+                    mTN + Messages.MessagesEntry.COLUMN_NAME_TS + ", " +
+                "(SELECT count(*) " +
+                 "FROM " + Messages.MessagesEntry.TABLE_NAME + " " +
+                 "WHERE " +
+                    mTN + Messages.MessagesEntry.COLUMN_NAME_GROUP_ID + " = " +
+                    gTN + Groups.GroupsEntry._ID + " " +
+                 "AND " + mTN + Messages.MessagesEntry.COLUMN_NAME_VIEWED + " = 0" +
+                ") AS " + unreadColumn + " " +
+                "FROM " + Groups.GroupsEntry.TABLE_NAME + " " +
+                "LEFT JOIN " + Messages.MessagesEntry.TABLE_NAME + " " +
+                "ON " +
+                    gTN + Groups.GroupsEntry._ID + " = " +
+                    mTN + Messages.MessagesEntry.COLUMN_NAME_GROUP_ID + " " +
+                "AND " +
+                    mTN + Messages.MessagesEntry.COLUMN_NAME_TS + " = (" +
+                        "SELECT MAX(" + Messages.MessagesEntry.COLUMN_NAME_TS + ") " +
+                        "FROM " + Messages.MessagesEntry.TABLE_NAME + " " +
+                        "WHERE " +
+                            gTN + Groups.GroupsEntry._ID + " = " +
+                            mTN + Messages.MessagesEntry.COLUMN_NAME_GROUP_ID +
+                    ")" +
+                "ORDER BY " + mTN + Messages.MessagesEntry.COLUMN_NAME_TS + " DESC";
+
+        SQLiteDatabase db = helper.getReadableDatabase();
+        Cursor results = db.rawQuery(query, null);
+
+        ArrayList<GroupListItem> groups = new ArrayList<>(results.getCount());
+
+        while (results.moveToNext()) {
+            groups.add(new GroupListItem(results, unreadColumn, appContext));
+        }
+
+        results.close();
+        db.close();
 
         return groups;
     }
@@ -65,6 +115,7 @@ public class DataManager {
             group = new Group(result, appContext);
         }
         result.close();
+        db.close();
         return group;
     }
 
@@ -84,7 +135,7 @@ public class DataManager {
         }
 
         results.close();
-
+        db.close();
         return users;
     }
 
@@ -105,6 +156,7 @@ public class DataManager {
             user = new User(result);
         }
         result.close();
+        db.close();
         return user;
     }
 
@@ -125,7 +177,7 @@ public class DataManager {
             messages.add(new Message(results, appContext));
         }
         results.close();
-
+        db.close();
         return messages;
     }
 
@@ -146,6 +198,7 @@ public class DataManager {
             message = new Message(result, appContext);
         }
         result.close();
+        db.close();
         return message;
     }
 
@@ -167,6 +220,7 @@ public class DataManager {
             message = new Message(result, appContext);
         }
         result.close();
+        db.close();
         return message;
     }
 
@@ -180,6 +234,7 @@ public class DataManager {
         result.moveToFirst();
         int value = result.getInt(0);
         result.close();
+        db.close();
         return value;
     }
 

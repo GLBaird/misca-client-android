@@ -12,6 +12,7 @@ import android.widget.TextView;
 import org.qumodo.data.MediaLoader;
 import org.qumodo.data.MediaLoaderListener;
 import org.qumodo.data.models.Group;
+import org.qumodo.data.models.GroupListItem;
 import org.qumodo.data.models.Message;
 import org.qumodo.data.models.User;
 import org.qumodo.miscaclient.dataProviders.MessageContentProvider;
@@ -24,10 +25,10 @@ import java.util.List;
 
 public class MyQMiscaGroupsListRecyclerViewAdapter extends RecyclerView.Adapter<MyQMiscaGroupsListRecyclerViewAdapter.ViewHolder> {
 
-    private final List<Group> mValues;
+    private final List<GroupListItem> mValues;
     private final OnListFragmentInteractionListener mListener;
 
-    public MyQMiscaGroupsListRecyclerViewAdapter(List<Group> items, OnListFragmentInteractionListener listener) {
+    public MyQMiscaGroupsListRecyclerViewAdapter(List<GroupListItem> items, OnListFragmentInteractionListener listener) {
         mValues = items;
         mListener = listener;
     }
@@ -42,13 +43,12 @@ public class MyQMiscaGroupsListRecyclerViewAdapter extends RecyclerView.Adapter<
     @Override
     public void onBindViewHolder(final ViewHolder holder, int position) {
         holder.mItem = mValues.get(position);
-        Message lastMessage = holder.mItem.getLastMessageInGroup();
-        holder.groupName.setText(holder.mItem.getName());
-        holder.messagePreview.setText(lastMessage.getText());
-        holder.messageTime.setText(lastMessage.getSentAsTime());
-        int unreadMessages = MessageContentProvider.unreadMessagesInGroup(holder.mView.getContext(), holder.mItem.getId());
-        holder.messageCountBubble.setVisibility(unreadMessages > 0 ? View.VISIBLE : View.GONE);
-        holder.messageCountBubble.setText(String.valueOf(unreadMessages));
+        holder.groupName.setText(holder.mItem.name);
+        holder.messagePreview.setText(holder.mItem.lastMessageText);
+        holder.messageTime.setText(holder.mItem.lastMessageTime);
+        holder.messageCountBubble.setVisibility(holder.mItem.unreadMessages > 0 ? View.VISIBLE : View.GONE);
+        holder.messageCountBubble.setText(String.valueOf(holder.mItem.unreadMessages));
+        holder.iconView.setFlagged(holder.mItem.userOnline, false);
         holder.refreshIconPreview();
 
 
@@ -77,7 +77,7 @@ public class MyQMiscaGroupsListRecyclerViewAdapter extends RecyclerView.Adapter<
         public QMiscaListSquareImageView iconView;
         public TextView messageTime;
         public TextView messageCountBubble;
-        public Group mItem;
+        public GroupListItem mItem;
 
         public ViewHolder(View view) {
             super(view);
@@ -91,13 +91,12 @@ public class MyQMiscaGroupsListRecyclerViewAdapter extends RecyclerView.Adapter<
         }
 
         public void refreshIconPreview() {
-            final String userID = mItem.getLastMessageInGroup().getFrom().getId();
             iconView.setVisibility(View.INVISIBLE);
             loader.setVisibility(View.VISIBLE);
-            MediaLoader.getUserCircularAvatar(userID, new MediaLoaderListener() {
+            MediaLoader.getUserCircularAvatar(mItem.lastMessageFromID, new MediaLoaderListener() {
                 @Override
                 public void imageHasLoaded(String ref, Bitmap image) {
-                    if (ref.equals(userID)) {
+                    if (ref.equals(mItem.lastMessageFromID)) {
                         loader.setVisibility(View.INVISIBLE);
                         iconView.setVisibility(View.VISIBLE);
                         iconView.setUserImage(image, true);

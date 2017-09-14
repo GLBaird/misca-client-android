@@ -20,8 +20,6 @@ public class QMiscaListSquareImageView extends AppCompatImageView {
 
     private Boolean flagged = false;
     private Bitmap userImage;
-//    final private Path path = new Path();
-//    final private Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint flagPaint = new Paint();
 
     public void setUserImage(Bitmap userImage, boolean updateUI) {
@@ -50,17 +48,17 @@ public class QMiscaListSquareImageView extends AppCompatImageView {
 
     public QMiscaListSquareImageView(Context context) {
         super(context);
-//        paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.DST_IN));
-//        paint.setAntiAlias(true);
-        flagPaint.setColor( getResources().getColor(R.color.colorGreen, getContext().getTheme()));
+        flagPaint.setColor( getResources().getColor(R.color.colorGreen, null));
     }
 
     public QMiscaListSquareImageView(Context context, AttributeSet attrs) {
         super(context, attrs);
+        flagPaint.setColor( getResources().getColor(R.color.colorGreen, null));
     }
 
     public QMiscaListSquareImageView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
+        flagPaint.setColor( getResources().getColor(R.color.colorGreen, null));
     }
 
     @SuppressWarnings("SuspiciousNameCombination")
@@ -76,26 +74,18 @@ public class QMiscaListSquareImageView extends AppCompatImageView {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
-        Log.d("@@", "Image is " + userImage);
-
         if (userImage != null) {
 
             @SuppressLint("DrawAllocation") Rect src = new Rect(0,0,userImage.getWidth()-1, userImage.getHeight()-1);
             @SuppressLint("DrawAllocation") Rect dest = new Rect(0,0,canvas.getWidth()-1, canvas.getHeight()-1);
             canvas.drawBitmap(userImage, src, dest, null);
 
-//            // Create a circular path.
-//            final float halfWidth = canvas.getWidth()/2;
-//            final float halfHeight = canvas.getHeight()/2;
-//            final float radius = Math.max(halfWidth, halfHeight);
-//            path.addCircle(halfWidth, halfHeight, radius, Path.Direction.CCW);
-//            canvas.drawPath(path, paint);
         }
 
         if (flagged) {
             final float flagSize = canvas.getWidth() / 10;
-            final float xPos = canvas.getWidth() - flagSize / 2;
-            final float yPOS = canvas.getHeight() - flagSize / 2;
+            final float xPos = canvas.getWidth() - flagSize;
+            final float yPOS = canvas.getHeight() - flagSize;
             canvas.drawCircle(xPos, yPOS, flagSize, flagPaint);
         }
     }

@@ -1,5 +1,6 @@
 package org.qumodo.miscaclient.fragments;
 
+import android.app.ActionBar;
 import android.content.Context;
 import android.os.Bundle;
 import android.app.Fragment;
@@ -10,7 +11,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import org.qumodo.data.models.Group;
+import org.qumodo.data.models.GroupListItem;
 import org.qumodo.miscaclient.R;
 import org.qumodo.miscaclient.dataProviders.GroupsContentProvider;
 
@@ -45,6 +46,10 @@ public class QMiscaGroupsListFragment extends Fragment {
         if (getArguments() != null) {
             mColumnCount = getArguments().getInt(ARG_COLUMN_COUNT);
         }
+
+        ActionBar ab = getActivity().getActionBar();
+        if (ab != null)
+            ab.setTitle(getString(R.string.actionbar_title_messages));
     }
 
     @Override
@@ -85,6 +90,6 @@ public class QMiscaGroupsListFragment extends Fragment {
     }
 
     public interface OnListFragmentInteractionListener {
-        void onListFragmentInteraction(Group item);
+        void onListFragmentInteraction(GroupListItem item);
     }
 }
