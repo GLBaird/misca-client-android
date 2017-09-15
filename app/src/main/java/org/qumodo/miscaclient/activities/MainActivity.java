@@ -7,19 +7,17 @@ import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.graphics.Bitmap;
 import android.os.Bundle;
-import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.util.TypedValue;
 
 import org.qumodo.data.models.GroupListItem;
-import org.qumodo.data.models.Message;
 import org.qumodo.miscaclient.R;
 import org.qumodo.miscaclient.dataProviders.MessageContentProvider;
-import org.qumodo.miscaclient.fragments.QMessageViewFragment;
+import org.qumodo.miscaclient.fragments.MessageListFragment;
 import org.qumodo.miscaclient.fragments.QMiscaGroupsListFragment;
 
 public class MainActivity extends Activity implements QMiscaGroupsListFragment.OnListFragmentInteractionListener,
-        QMessageViewFragment.OnMessageFragmentInteractionListener, FragmentManager.OnBackStackChangedListener {
+        MessageListFragment.OnMessageListInteractionListener, FragmentManager.OnBackStackChangedListener {
 
     private static final String TAG = "MAIN_ACTIVITY";
 
@@ -55,7 +53,7 @@ public class MainActivity extends Activity implements QMiscaGroupsListFragment.O
                 fragment = new QMiscaGroupsListFragment();
             } else {
                 MessageContentProvider.setup(getApplicationContext(), groupID);
-                fragment = new QMessageViewFragment();
+                fragment = new MessageListFragment();
             }
 
             fragment.setRetainInstance(true);
@@ -97,12 +95,12 @@ public class MainActivity extends Activity implements QMiscaGroupsListFragment.O
     public void onListFragmentInteraction(GroupListItem item) {
         groupID = item.id;
         MessageContentProvider.setup(getApplicationContext(), groupID);
-        QMessageViewFragment fragment = new QMessageViewFragment();
+        MessageListFragment fragment = new MessageListFragment();
         fragment.setGroup(groupID, getApplicationContext());
         fragment.setRetainInstance(true);
         getFragmentManager()
                 .beginTransaction()
-                .replace(R.id.main_activity_fragment_container, fragment, QMessageViewFragment.TAG)
+                .replace(R.id.main_activity_fragment_container, fragment, MessageListFragment.TAG)
                 .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
                 .addToBackStack(QMiscaGroupsListFragment.TAG)
                 .commit();

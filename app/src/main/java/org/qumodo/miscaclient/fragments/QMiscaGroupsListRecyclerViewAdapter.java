@@ -2,7 +2,6 @@ package org.qumodo.miscaclient.fragments;
 
 import android.graphics.Bitmap;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,24 +10,20 @@ import android.widget.TextView;
 
 import org.qumodo.data.MediaLoader;
 import org.qumodo.data.MediaLoaderListener;
-import org.qumodo.data.models.Group;
 import org.qumodo.data.models.GroupListItem;
-import org.qumodo.data.models.Message;
-import org.qumodo.data.models.User;
-import org.qumodo.miscaclient.dataProviders.MessageContentProvider;
-import org.qumodo.miscaclient.fragments.QMiscaGroupsListFragment.OnListFragmentInteractionListener;
 import org.qumodo.miscaclient.R;
+import org.qumodo.miscaclient.fragments.QMiscaGroupsListFragment.OnListFragmentInteractionListener;
 import org.qumodo.miscaclient.views.QMiscaListSquareImageView;
 
 import java.util.List;
 
 
-public class MyQMiscaGroupsListRecyclerViewAdapter extends RecyclerView.Adapter<MyQMiscaGroupsListRecyclerViewAdapter.ViewHolder> {
+public class QMiscaGroupsListRecyclerViewAdapter extends RecyclerView.Adapter<QMiscaGroupsListRecyclerViewAdapter.ViewHolder> {
 
     private final List<GroupListItem> mValues;
     private final OnListFragmentInteractionListener mListener;
 
-    public MyQMiscaGroupsListRecyclerViewAdapter(List<GroupListItem> items, OnListFragmentInteractionListener listener) {
+    public QMiscaGroupsListRecyclerViewAdapter(List<GroupListItem> items, OnListFragmentInteractionListener listener) {
         mValues = items;
         mListener = listener;
     }

@@ -78,6 +78,16 @@
         <item name="android:lineSpacingExtra">16sp</item>
     </style>
 
+    <style name="QMessageText" parent="QTextStyle">
+        <item name="android:textColor">@color/colorChatTextBlack</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:lineSpacingExtra">3sp</item>
+    </style>
 
 
+    <style name="QMessageTimeText" parent="QTextStyle">
+        <item name="android:textColor">@color/colorChatTimeText</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:lineSpacingExtra">0sp</item>
+    </style>
 </resources>

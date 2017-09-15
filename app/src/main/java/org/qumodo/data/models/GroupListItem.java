@@ -38,4 +38,17 @@ public class GroupListItem {
         unreadMessages = cursor.getInt(cursor.getColumnIndex(refForMessageCount));
     }
 
+    @Override
+    public String toString() {
+        return "GroupListItem{" +
+                "id='" + id + '\'' +
+                ", name='" + name + '\'' +
+                ", lastMessageText='" + lastMessageText + '\'' +
+                ", lastMessageTime='" + lastMessageTime + '\'' +
+                ", lastMessageFromID='" + lastMessageFromID + '\'' +
+                ", lastMessageType=" + lastMessageType +
+                ", unreadMessages=" + unreadMessages +
+                ", userOnline=" + userOnline +
+                '}';
+    }
 }

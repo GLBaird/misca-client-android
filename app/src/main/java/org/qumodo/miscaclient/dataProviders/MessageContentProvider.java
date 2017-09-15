@@ -30,6 +30,8 @@ public class MessageContentProvider {
     public static final Map<String, Message> ITEM_MAP = new HashMap<>();
 
     public static void setup(Context context, String groupID){
+        ITEMS.clear();
+        ITEM_MAP.clear();
         DataManager dm = new DataManager(context);
         List<Message> vals = dm.getMessages(groupID);
         for (Message val: vals) {

@@ -16,4 +16,9 @@
     <color name="colorFormDiverLine">#FF0091EA</color>
     <color name="colorButtonBlue">#FF0091EA</color>
     <color name="colorListSeparator">#FFECEFF1</color>
+    <color name="colorChatGrey">#FFECEFF1</color>
+    <color name="colorChatBlue">#FF0091EA</color>
+    <color name="colorChatTextBlack">#DE000000</color>
+    <color name="colorChatTextWhite">#FFFFFFFF</color>
+    <color name="colorChatTimeText">#8A000000</color>
 </resources>
