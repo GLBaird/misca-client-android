@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:state_pressed="false">
+        <layer-list>
+            <item
+                android:drawable="@drawable/ic_camera_alt_grey_24dp"
+                android:width="30dp"
+                android:height="30dp"
+                android:gravity="center"/>
+        </layer-list>
+    </item>
+
+    <item android:state_pressed="true">
+        <layer-list>
+            <item
+                android:drawable="@drawable/ic_camera_alt_black_24dp"
+                android:height="30dp"
+                android:width="30dp"
+                android:gravity="center"/>
+        </layer-list>
+    </item>
+
+</selector>

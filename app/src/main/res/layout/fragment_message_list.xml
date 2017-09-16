@@ -1,13 +1,70 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.v7.widget.RecyclerView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/list"
-    android:name="org.qumodo.miscaclient.fragments.MessageListFragment"
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_alignParentTop="true"
+    android:layout_alignParentStart="true"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:layout_marginLeft="0dp"
-    android:layout_marginRight="0dp"
-    app:layoutManager="LinearLayoutManager"
-    tools:context="org.qumodo.miscaclient.fragments.MessageListFragment"
-    tools:listitem="@layout/fragment_message_user" />
+    android:layout_height="match_parent">
+
+    <android.support.v7.widget.RecyclerView
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:id="@+id/list"
+        android:name="org.qumodo.miscaclient.fragments.MessageListFragment"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_above="@+id/text_entry"
+        android:layout_marginLeft="0dp"
+        android:layout_marginRight="0dp"
+        app:layoutManager="LinearLayoutManager"
+        tools:context="org.qumodo.miscaclient.fragments.MessageListFragment"
+        tools:listitem="@layout/fragment_message_user" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_margin="0dp"
+        android:background="@color/colorListSeparator"
+        android:layout_above="@+id/text_entry" />
+
+    <EditText
+        android:id="@+id/text_entry"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentStart="true"
+        android:layout_toStartOf="@+id/send_button"
+        android:background="@drawable/rounded_text_box"
+        android:textColor="@color/colorChatTextBlack"
+        android:layout_marginBottom="@dimen/list_margin"
+        android:layout_marginStart="@dimen/list_margin"
+        android:layout_marginEnd="@dimen/list_margin"
+        android:layout_marginTop="@dimen/list_margin"/>
+
+    <Button
+        android:id="@+id/camera"
+        android:layout_width="40dp"
+        android:layout_height="match_parent"
+        android:layout_marginBottom="@dimen/list_margin"
+        android:layout_alignTop="@+id/text_entry"
+        android:background="@drawable/camera_button"
+        android:layout_alignParentBottom="true"
+        android:layout_alignEnd="@+id/text_entry"
+        android:layout_centerVertical="true"
+        android:layout_marginEnd="2dp"
+        android:gravity="center_vertical"/>
+
+    <Button
+        android:id="@+id/send_button"
+        android:background="@drawable/round_send_button"
+        android:layout_width="50dp"
+        android:layout_height="match_parent"
+        android:layout_centerVertical="true"
+        android:gravity="center_vertical"
+        android:layout_alignTop="@+id/text_entry"
+        android:layout_marginEnd="@dimen/list_margin"
+        android:layout_alignParentEnd="true"
+        android:layout_marginBottom="@dimen/list_margin"/>
+
+</RelativeLayout>

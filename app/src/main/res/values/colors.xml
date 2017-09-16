@@ -21,4 +21,6 @@
     <color name="colorChatTextBlack">#DE000000</color>
     <color name="colorChatTextWhite">#FFFFFFFF</color>
     <color name="colorChatTimeText">#8A000000</color>
+    <color name="colorTextChatFieldBorder">#FFECEFF1</color>
+    <color name="colorCameraIcon">#FFB0BEC5</color>
 </resources>
