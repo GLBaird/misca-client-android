@@ -1,18 +1,23 @@
 package org.qumodo.miscaclient.fragments;
 
+import android.graphics.Bitmap;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import org.qumodo.data.MediaLoader;
+import org.qumodo.data.MediaLoaderListener;
 import org.qumodo.miscaclient.R;
 import org.qumodo.miscaclient.dataProviders.UserSettingsManager;
 import org.qumodo.data.models.Message;
 import org.qumodo.network.QMessageType;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 
@@ -30,21 +35,17 @@ public class MessageRecyclerViewAdapter extends RecyclerView.Adapter<MessageRecy
 
     private static class MessageViewTypes {
         private static final int USER_TEXT      = R.layout.fragment_message_user;
-        private static final int USER_IMAGE     = 1;
+        private static final int USER_IMAGE     = R.layout.fragment_message_user_picture;
         private static final int GROUP_TEXT     = R.layout.fragment_message_group;
-        private static final int GROUP_IMAGE    = 3;
-        private static final int MISCA_TEXT     = 4;
-        private static final int MISCA_IMAGE    = 5;
+        private static final int GROUP_IMAGE    = R.layout.fragment_message_group_picture;
+        private static final int MISCA_TEXT     = R.layout.fragment_message_user;
+        private static final int MISCA_IMAGE    = R.layout.fragment_message_group_picture;
         private static final int MISCA_QUESTION = 6;
     }
 
     public MessageRecyclerViewAdapter(List<Message> items, MessageListFragment.OnMessageListInteractionListener listener) {
-        Log.d("@@ RECUCE VA ", "CONSTURCTOR");
         mValues = items;
         mListener = listener;
-        for (Message m : items) {
-            Log.d(">>> MESSAGE >>>", m.getText());
-        }
     }
 
     private String getFromID(Message message) {
@@ -88,11 +89,8 @@ public class MessageRecyclerViewAdapter extends RecyclerView.Adapter<MessageRecy
         return new ViewHolder(view);
     }
 
-    @Override
-    public void onBindViewHolder(final ViewHolder holder, int position) {
-        holder.mItem = mValues.get(position);
+    private void bindTextMessageView(final ViewHolder holder) {
         holder.messageText.setText(holder.mItem.getText());
-        holder.messageTime.setText(holder.mItem.getSentAsTime());
         if (holder.mItem.getText().length() < 30) {
             LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
                     ViewGroup.LayoutParams.WRAP_CONTENT,
@@ -108,7 +106,54 @@ public class MessageRecyclerViewAdapter extends RecyclerView.Adapter<MessageRecy
             lp.weight = 3;
             holder.messageText.setLayoutParams(lp);
         }
-        // TODO: SET ONCLICK LISTENERS
+    }
+
+    private boolean loading = false;
+
+    private void bindPictureMessage(final ViewHolder holder) {
+        loading = true;
+        MediaLoader.getMessageImage(holder.mItem.getId(), holder.mView.getContext(), new MediaLoaderListener() {
+            @Override
+            public void imageHasLoaded(String ref, Bitmap image) {
+                holder.imageView.setImageBitmap(image);
+                holder.imageView.setVisibility(View.VISIBLE);
+                loading = false;
+            }
+
+            @Override
+            public void imageHasFailedToLoad(String ref) {
+                Log.d("BINDER", "load failed");
+                holder.imageView.setImageResource(R.drawable.sample_image);
+                loading = false;
+            }
+        });
+    }
+
+    @Override
+    public void onBindViewHolder(final ViewHolder holder, int position) {
+        holder.mItem = mValues.get(position);
+        holder.messageTime.setText(holder.mItem.getSentAsTime());
+        if (holder.mItem.getType() == QMessageType.TEXT) {
+            bindTextMessageView(holder);
+        } else if (holder.mItem.getType() == QMessageType.PICTURE) {
+            bindPictureMessage(holder);
+        }
+    }
+
+    @Override
+    public void onViewDetachedFromWindow(ViewHolder holder) {
+        super.onViewDetachedFromWindow(holder);
+        if (holder.imageView != null) {
+            holder.imageView.setVisibility(View.INVISIBLE);
+        }
+    }
+
+    @Override
+    public void onViewAttachedToWindow(ViewHolder holder) {
+        super.onViewAttachedToWindow(holder);
+        if (holder.imageView != null && !loading) {
+            holder.imageView.setVisibility(View.VISIBLE);
+        }
     }
 
     @Override
@@ -120,6 +165,7 @@ public class MessageRecyclerViewAdapter extends RecyclerView.Adapter<MessageRecy
         public final View mView;
         public final TextView messageText;
         public final TextView messageTime;
+        public final ImageView imageView;
         public Message mItem;
 
         public ViewHolder(View view) {
@@ -127,6 +173,10 @@ public class MessageRecyclerViewAdapter extends RecyclerView.Adapter<MessageRecy
             mView = view;
             messageText = (TextView) view.findViewById(R.id.message_list_item_text);
             messageTime = (TextView) view.findViewById(R.id.message_list_item_time);
+            imageView = (ImageView) view.findViewById(R.id.image_view);
+            if (imageView != null) {
+                imageView.setClipToOutline(true);
+            }
         }
 
         @Override

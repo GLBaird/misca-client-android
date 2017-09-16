@@ -11,12 +11,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Helper Class to provide fake data from DB for mocking UI
- * To be replaced with real data provider.
- * <p>
- * TODO: Replace all uses of this class before publishing app.
- */
+
 public class MessageContentProvider {
 
     /**
@@ -44,7 +39,7 @@ public class MessageContentProvider {
         return dm.unreadMessagesInGroup(groupID);
     }
 
-    private static void addItem(Message item) {
+    public static void addItem(Message item) {
         ITEMS.add(item);
         ITEM_MAP.put(item.getId(), item);
     }

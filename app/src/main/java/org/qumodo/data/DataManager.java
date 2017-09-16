@@ -1,10 +1,13 @@
 package org.qumodo.data;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.qumodo.data.contracts.Groups;
 import org.qumodo.data.contracts.Messages;
 import org.qumodo.data.contracts.Users;
@@ -12,14 +15,19 @@ import org.qumodo.data.models.Group;
 import org.qumodo.data.models.GroupListItem;
 import org.qumodo.data.models.Message;
 import org.qumodo.data.models.User;
+import org.qumodo.miscaclient.dataProviders.UserSettingsManager;
+import org.qumodo.network.QMessageType;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 public class DataManager {
 
     DatabaseHelper helper;
     Context appContext;
+    private static final String TAG = "DataManager";
 
     public DataManager(Context context) {
         appContext = context.getApplicationContext();
@@ -236,6 +244,46 @@ public class DataManager {
         result.close();
         db.close();
         return value;
+    }
+
+    public Message addNewMessage(String text, QMessageType type, String groupID, String id) {
+        if (id == null) {
+            id = UUID.randomUUID().toString();
+        }
+        try {
+            JSONObject data = new JSONObject();
+            data.put("text", text);
+            String userID = UserSettingsManager.getUserID();
+            Message newMessage = new Message(
+                id,
+                userID,
+                groupID,
+                new Date().getTime(),
+                type.value,
+                data.toString(),
+                1,
+                appContext
+            );
+
+            ContentValues cv = new ContentValues();
+            cv.put(Messages.MessagesEntry._ID, newMessage.getId());
+            cv.put(Messages.MessagesEntry.COLUMN_NAME_TYPE, newMessage.getType().value);
+            cv.put(Messages.MessagesEntry.COLUMN_NAME_GROUP_ID, groupID);
+            cv.put(Messages.MessagesEntry.COLUMN_NAME_FROM_ID, userID);
+            cv.put(Messages.MessagesEntry.COLUMN_NAME_DATA, data.toString());
+            cv.put(Messages.MessagesEntry.COLUMN_NAME_TS, newMessage.getTS());
+            cv.put(Messages.MessagesEntry.COLUMN_NAME_VIEWED, 1);
+
+            SQLiteDatabase db = helper.getWritableDatabase();
+            db.insert(Messages.MessagesEntry.TABLE_NAME, null, cv);
+
+            return newMessage;
+        } catch (JSONException err) {
+            //TODO: Handle this error??
+            Log.d(TAG, "Error creating message with JSON??");
+            err.printStackTrace();
+            return null;
+        }
     }
 
 }
