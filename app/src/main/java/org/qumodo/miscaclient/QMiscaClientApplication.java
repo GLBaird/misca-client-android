@@ -6,16 +6,15 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.util.Log;
+import android.widget.Toast;
 
-import org.qumodo.data.DataManager;
+import org.json.JSONObject;
 import org.qumodo.data.MediaLoader;
-import org.qumodo.data.models.Group;
-import org.qumodo.data.models.GroupListItem;
 import org.qumodo.miscaclient.dataProviders.GroupsContentProvider;
-import org.qumodo.miscaclient.dataProviders.MessageContentProvider;
+import org.qumodo.miscaclient.dataProviders.UserSettingsManager;
+import org.qumodo.network.QMessage;
+import org.qumodo.network.QMessageType;
 import org.qumodo.services.QTCPSocketService;
-
-import java.util.List;
 
 public class    QMiscaClientApplication extends Application {
 
@@ -28,26 +27,62 @@ public class    QMiscaClientApplication extends Application {
     private BroadcastReceiver receiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-            if (action.equals(QTCPSocketService.DELEGATE_SOCKET_ERROR)
-                    || action.equals(QTCPSocketService.DELEGATE_SOCKET_CLOSED)
-                    || action.equals(QTCPSocketService.DELEGATE_SEND_ERROR)) {
-                socketServiceActive = false;
-                Log.d("MAIN APP", "Socket Closed");
-            } else if (action.equals(QTCPSocketService.DELEGATE_SOCKET_CONNECTION)) {
-                socketServiceActive = true;
-                Log.d("MAIN APP", "Socket connected");
-            } else if (action.equals(APPLICATION_TEAR_SOCKET_DOWN) && socketServiceActive) {
-                Intent closeSocketIntent = new Intent();
-                closeSocketIntent.setAction(QTCPSocketService.ACTION_CLOSE_SOCKET);
-                sendBroadcast(closeSocketIntent);
-                socketServiceActive = false;
-            } else if (action.equals(APPLICATION_CONNECT_SOCKET) && !socketServiceActive) {
-                startTCPSocket();
-            }
+        String action = intent.getAction();
+        if (
+            action.equals(QTCPSocketService.DELEGATE_SOCKET_ERROR)
+            || action.equals(QTCPSocketService.DELEGATE_SOCKET_CLOSED)
+        ) {
+            socketServiceActive = false;
+            UserSettingsManager.setUserAuthorised(false);
+            Log.d("MAIN APP", "Socket Closed");
+            Toast.makeText(getApplicationContext(), "Connection to MISCA has closed", Toast.LENGTH_SHORT)
+                 .show();
+        } else if (action.equals(QTCPSocketService.DELEGATE_SOCKET_CONNECTION)) {
+            socketServiceActive = true;
+            Log.d("MAIN APP", "Socket connected");
+            sendUserCredentials();
+        } else if (action.equals(APPLICATION_TEAR_SOCKET_DOWN) && socketServiceActive) {
+            Intent closeSocketIntent = new Intent();
+            closeSocketIntent.setAction(QTCPSocketService.ACTION_CLOSE_SOCKET);
+            sendBroadcast(closeSocketIntent);
+            socketServiceActive = false;
+        } else if (action.equals(APPLICATION_CONNECT_SOCKET) && !socketServiceActive) {
+            startTCPSocket();
+        }
         }
     };
 
+    private void sendUserCredentials() {
+        try {
+            String userID = UserSettingsManager.getUserID();
+            String deviceID = UserSettingsManager.getDeviceID();
+            String hashedDeviceCertificate = UserSettingsManager.getHashedClientPublicKeyString();
+
+            if (userID != null && deviceID != null && hashedDeviceCertificate != null) {
+
+                JSONObject data = new JSONObject();
+                data.put(QMessage.KEY_DEVICE_ID, deviceID);
+                data.put(QMessage.KEY_PUBLIC_KEY_HASH, hashedDeviceCertificate);
+                data.put(QMessage.KEY_PASS_PHRASE, "No_passphrase_yet");
+
+                QMessage credentials = new QMessage("", userID, QMessageType.NEW_CONNECTION, data);
+
+                Intent messagePackage = new Intent();
+                messagePackage.setAction(QTCPSocketService.ACTION_SEND_MESSAGE);
+                messagePackage.putExtra(QTCPSocketService.INTENT_KEY_MESSAGE, credentials.serialize());
+                sendBroadcast(messagePackage);
+            } else {
+                Log.e("QTCPSocket", "Error loading defaults from UserSettingsManager");
+                Toast.makeText(getApplicationContext(), "Error loading user defaults", Toast.LENGTH_SHORT)
+                     .show();
+            }
+        } catch (Exception error) {
+            Log.e("QTCPSocket", "Failed to create user credentials");
+            Toast.makeText(getApplicationContext(), "Failed to create user credentials", Toast.LENGTH_SHORT)
+                 .show();
+            error.printStackTrace();
+        }
+    }
 
     @Override
     public void onCreate() {
@@ -61,9 +96,12 @@ public class    QMiscaClientApplication extends Application {
         filter.addAction(APPLICATION_TEAR_SOCKET_DOWN);
         registerReceiver(receiver, filter);
 
+        UserSettingsManager.loadSharedPreferences(getApplicationContext());
         setupDataProviders();
 
-        startTCPSocket();
+        if (UserSettingsManager.getUserID() != null) {
+            startTCPSocket();
+        }
     }
 
     private void setupDataProviders() {

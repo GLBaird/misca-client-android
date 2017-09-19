@@ -138,7 +138,7 @@ public class MessageListFragment extends Fragment implements View.OnClickListene
     private void sendMessage(String message) {
         DataManager dm = new DataManager(getContext());
         MessageContentProvider.addItem(
-                dm.addNewMessage(message, QMessageType.TEXT, group.getId(), null)
+                dm.addNewMessage(message, QMessageType.TEXT, group.getId(), null, null, null)
         );
         adapter.notifyItemInserted(MessageContentProvider.ITEMS.size() - 1);
 

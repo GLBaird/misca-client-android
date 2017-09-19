@@ -44,4 +44,11 @@ public class MessageContentProvider {
         ITEM_MAP.put(item.getId(), item);
     }
 
+    public static void updateMessageError(String messageID, boolean error) {
+        Message message = ITEM_MAP.get(messageID);
+        if (message != null) {
+            message.setSendError(error);
+        }
+    }
+
 }

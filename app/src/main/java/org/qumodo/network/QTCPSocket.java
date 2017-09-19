@@ -2,6 +2,9 @@ package org.qumodo.network;
 
 import android.util.Log;
 
+import org.json.JSONObject;
+import org.qumodo.miscaclient.dataProviders.UserSettingsManager;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -67,6 +70,7 @@ public class QTCPSocket {
             listener.socketClosed();
         }
     }
+
 
     private void setupBuffers() throws IOException {
         Log.d(LOG_TAG, "Creating input and output buffers");

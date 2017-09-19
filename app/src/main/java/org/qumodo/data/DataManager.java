@@ -246,7 +246,7 @@ public class DataManager {
         return value;
     }
 
-    public Message addNewMessage(String text, QMessageType type, String groupID, String id) {
+    public Message addNewMessage(String text, QMessageType type, String groupID, String id, String from, Date ts) {
         if (id == null) {
             id = UUID.randomUUID().toString();
         }
@@ -256,9 +256,9 @@ public class DataManager {
             String userID = UserSettingsManager.getUserID();
             Message newMessage = new Message(
                 id,
-                userID,
+                from == null ? userID : from,
                 groupID,
-                new Date().getTime(),
+                ts == null ? new Date().getTime() : ts.getTime(),
                 type.value,
                 data.toString(),
                 1,
@@ -284,6 +284,13 @@ public class DataManager {
             err.printStackTrace();
             return null;
         }
+    }
+
+    public void setMessageError(String messageID, boolean error) {
+        SQLiteDatabase db = helper.getWritableDatabase();
+        ContentValues cv = new ContentValues(1);
+        cv.put(Messages.MessagesEntry.COLUMN_NAME_SEND_ERROR, error);
+        db.update(Messages.MessagesEntry.TABLE_NAME, cv, Messages.MessagesEntry._ID + " = ?", new String[]{messageID});
     }
 
 }

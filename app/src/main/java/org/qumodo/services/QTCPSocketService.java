@@ -50,15 +50,19 @@ public class QTCPSocketService extends Service implements Runnable, QClientSocke
         public void onReceive(Context context, Intent intent) {
 
             String action = intent.getAction();
-            if (action.equals(ACTION_SEND_MESSAGE)) {
-                String message = intent.getStringExtra(INTENT_KEY_MESSAGE);
-                if (message != null && !message.isEmpty()) {
-                    sendMessageToSocket(message);
-                }
-            } else if (action.equals(ACTION_CLOSE_SOCKET)){
-                tearDownSocket();
-            } else if (action.equals(ACTION_RESTART_SOCKET)) {
-
+            switch (action) {
+                case ACTION_SEND_MESSAGE:
+                    String message = intent.getStringExtra(INTENT_KEY_MESSAGE);
+                    if (message != null && !message.isEmpty()) {
+                        sendMessageToSocket(message);
+                    }
+                    break;
+                case ACTION_CLOSE_SOCKET:
+                    tearDownSocket();
+                    break;
+                case ACTION_RESTART_SOCKET:
+                    startSocket();
+                    break;
             }
         }
     };
@@ -68,7 +72,7 @@ public class QTCPSocketService extends Service implements Runnable, QClientSocke
         if (socketClient.isConnected()) {
             socketClient.sendMessage(message);
         } else {
-            broadcastError(DELEGATE_SEND_ERROR, "Socket not connected!");
+            broadcastError(DELEGATE_SEND_ERROR, "Socket not connected!", message);
             stopThread();
         }
     }
@@ -81,27 +85,29 @@ public class QTCPSocketService extends Service implements Runnable, QClientSocke
         sendBroadcast(messageIntent);
     }
 
-    private void broadcastError(String delegationError, String errorMessage) {
+    private void broadcastError(String delegationError, String errorMessage, String message) {
         Log.d(LOG_TAG, "Broadcast Error");
         Intent errorIntent = new Intent();
         errorIntent.setAction(delegationError);
         errorIntent.putExtra(INTENT_KEY_ERROR, errorMessage);
+        if (message != null) {
+            errorIntent.putExtra(INTENT_KEY_MESSAGE, message);
+        }
         sendBroadcast(errorIntent);
     }
+
+    String hostName;
+    int portNumber;
 
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d(LOG_TAG, "Start Command Service");
 
-        String hostName = intent.getStringExtra(INTENT_KEY_HOSTNAME);
-        int port = intent.getIntExtra(INTENT_KEY_PORT, 9500);
-        if (socketClient == null) {
-            Log.d(LOG_TAG, "Making socket");
-            socketClient = new QTCPSocket(hostName, port, this);
-        }
+        hostName = intent.getStringExtra(INTENT_KEY_HOSTNAME);
+        portNumber = intent.getIntExtra(INTENT_KEY_PORT, 9500);
 
-        startThread();
+        startSocket();
 
         IntentFilter filter = new IntentFilter();
         filter.addAction(ACTION_SEND_MESSAGE);
@@ -110,6 +116,14 @@ public class QTCPSocketService extends Service implements Runnable, QClientSocke
         registerReceiver(receiver, filter);
 
         return Service.START_REDELIVER_INTENT;
+    }
+
+    private void startSocket() {
+        if (socketClient == null) {
+            Log.d(LOG_TAG, "Making socket");
+            socketClient = new QTCPSocket(hostName, portNumber, this);
+            startThread();
+        }
     }
 
     @Override
@@ -167,7 +181,7 @@ public class QTCPSocketService extends Service implements Runnable, QClientSocke
     @Override
     public void SocketConnectionError(Exception error) {
         Log.d(LOG_TAG, "SocketConnectionError");
-        broadcastError(DELEGATE_SOCKET_ERROR, "Socket connection error");
+        broadcastError(DELEGATE_SOCKET_ERROR, "Socket connection error", null);
         this.tearDownSocket();
     }
 

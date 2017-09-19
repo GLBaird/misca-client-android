@@ -13,14 +13,15 @@ import java.text.DateFormat;
 import java.util.Date;
 
 public class Message {
-    String id;
-    String fromID;
-    String groupID;
-    Date sent;
-    QMessageType type;
-    String text;
-    Boolean viewed;
-    Context appContext;
+    private String id;
+    private String fromID;
+    private String groupID;
+    private Date sent;
+    private QMessageType type;
+    private String text;
+    private Boolean viewed;
+    private Context appContext;
+    private Boolean sendError = false;
 
     public Message(Cursor cursor, Context context) {
         this(
@@ -114,6 +115,15 @@ public class Message {
     public Boolean getViewed() {
         return viewed;
     }
+
+    public Boolean getSendError() {
+        return sendError;
+    }
+
+    public void setSendError(Boolean error) {
+        sendError = error;
+    }
+
 
     @Override
     public String toString() {

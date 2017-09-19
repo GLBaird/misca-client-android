@@ -2,12 +2,20 @@
 <android.support.v7.widget.ContentFrameLayout
     android:id="@+id/main_activity_fragment_container"
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context="org.qumodo.miscaclient.activities.MainActivity"
     tools:layout_editor_absoluteY="81dp"
     tools:layout_editor_absoluteX="0dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:drawableTop="@drawable/misca_solid_icon"
+        android:drawablePadding="@dimen/text_margin_v"
+        android:gravity="center"
+        android:text="@string/select_user_account_from_menu"/>
 
 </android.support.v7.widget.ContentFrameLayout>

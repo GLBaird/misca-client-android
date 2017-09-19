@@ -19,6 +19,7 @@ public class Messages {
         public static final String COLUMN_NAME_TYPE = "type";
         public static final String COLUMN_NAME_DATA = "data";
         public static final String COLUMN_NAME_VIEWED = "viewed";
+        public static final String COLUMN_NAME_SEND_ERROR = "send_error";
 
     }
 
@@ -31,6 +32,7 @@ public class Messages {
                     MessagesEntry.COLUMN_NAME_TYPE + " INT," +
                     MessagesEntry.COLUMN_NAME_DATA + " TEXT," +
                     MessagesEntry.COLUMN_NAME_VIEWED + " INT," +
+                    MessagesEntry.COLUMN_NAME_SEND_ERROR + " INT," +
                     "FOREIGN KEY (" +
                             MessagesEntry.COLUMN_NAME_FROM_ID +
                         ") REFERENCES " +
@@ -62,7 +64,8 @@ public class Messages {
             MessagesEntry.COLUMN_NAME_TS,
             MessagesEntry.COLUMN_NAME_TYPE,
             MessagesEntry.COLUMN_NAME_DATA,
-            MessagesEntry.COLUMN_NAME_VIEWED
+            MessagesEntry.COLUMN_NAME_VIEWED,
+            MessagesEntry.COLUMN_NAME_SEND_ERROR
     };
 
 }

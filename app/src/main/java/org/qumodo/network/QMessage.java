@@ -15,6 +15,19 @@ public class QMessage {
     public JSONObject data;
     public int ts;
 
+    public static final String KEY_DEVICE_ID = "deviceID";
+    public static final String KEY_PUBLIC_KEY_HASH = "publicKeyHash";
+    public static final String KEY_PASS_PHRASE = "passPhrase";
+    public static final String KEY_GROUP_ID = "groupID";
+    public static final String KEY_USER_AUTHENTICATION = "userAuthentication";
+    public static final String KEY_MISCA_ID = "miscaID";
+    public static final String KEY_MESSAGE = "message";
+    public static final String KEY_CAPTION = "caption";
+    public static final String KEY_MISCA_QUESTION = "miscaQuestion";
+    public static final String KEY_MISCA_QUESTION_LIST = "miscaQuestionList";
+    public static final String KEY_MISCA_RESPONSE = "miscaResponse";
+    public static final String KEY_MISCA_CAPTION = "miscaCaption";
+
     public static QMessage make(String messageJSON) throws JSONException {
         JSONObject parsed = new JSONObject(messageJSON);
         JSONObject data = parsed.getJSONObject("data");

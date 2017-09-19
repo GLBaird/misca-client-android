@@ -14,6 +14,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.v4.content.FileProvider;
+import android.support.v7.widget.ContentFrameLayout;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.Menu;
@@ -25,12 +26,14 @@ import org.qumodo.data.MediaLoader;
 import org.qumodo.data.models.GroupListItem;
 import org.qumodo.data.models.Message;
 import org.qumodo.miscaclient.BuildConfig;
+import org.qumodo.miscaclient.QMiscaClientApplication;
 import org.qumodo.miscaclient.R;
 import org.qumodo.miscaclient.dataProviders.MessageContentProvider;
 import org.qumodo.miscaclient.dataProviders.UserSettingsManager;
 import org.qumodo.miscaclient.fragments.MessageListFragment;
 import org.qumodo.miscaclient.fragments.QMiscaGroupsListFragment;
 import org.qumodo.network.QMessageType;
+import org.qumodo.services.QTCPSocketService;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -68,6 +71,16 @@ public class MainActivity extends Activity implements QMiscaGroupsListFragment.O
         actionBar = getActionBar();
         if (actionBar != null)
             actionBar.setDisplayHomeAsUpEnabled(groupID != null);
+
+        if (UserSettingsManager.getUserID() != null && UserSettingsManager.isUserAuthorised()) {
+            loadMainFragment();
+        }
+    }
+
+    private void loadMainFragment() {
+
+        ContentFrameLayout frame = (ContentFrameLayout) findViewById(R.id.main_activity_fragment_container);
+        frame.removeAllViews();
 
         Fragment fragment = getFragmentManager()
                 .findFragmentById(R.id.main_activity_fragment_container);
@@ -204,7 +217,7 @@ public class MainActivity extends Activity implements QMiscaGroupsListFragment.O
 
     private void storeAndSendImageToMessageList() {
         DataManager dm = new DataManager(getApplicationContext());
-        Message newPictureMessage = dm.addNewMessage(messageTextForCaption, QMessageType.PICTURE, groupID, newImageID);
+        Message newPictureMessage = dm.addNewMessage(messageTextForCaption, QMessageType.PICTURE, groupID, newImageID, null, null);
         Fragment fragment = getFragmentManager().findFragmentById(R.id.main_activity_fragment_container);
         if (fragment instanceof MessageListFragment) {
             MessageListFragment messageListFragment = (MessageListFragment) fragment;
@@ -242,34 +255,59 @@ public class MainActivity extends Activity implements QMiscaGroupsListFragment.O
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.user_ids, menu);
 
-        for (int i = 0; i < menu.size(); i++) {
-            if (menu.getItem(i).getItemId() == R.id.action_user_a) {
-                item1 = menu.getItem(i);
-                menu.getItem(i).setIcon(R.drawable.ic_check_black_24dp);
-            } else if (menu.getItem(i).getItemId() == R.id.action_user_b) {
-                menu.getItem(i).setIcon(R.drawable.ic_check_black_24dp);
-                item2 = menu.getItem(i);
-            }
-        }
-        return super.onCreateOptionsMenu(menu);
 
+        String userID = UserSettingsManager.getUserID();
+
+        for (int i = 0; i < menu.size(); i++) {
+           if (menu.getItem(i).getItemId() == R.id.action_user_a)
+            item1 = menu.getItem(i);
+           else if (menu.getItem(i).getItemId() == R.id.action_user_b)
+            item2 = menu.getItem(i);
+        }
+
+        if (userID != null && userID.equals(UserSettingsManager.USER_ID_A)) {
+            setMenuForID(R.id.action_user_a);
+        } else if (userID != null && userID.equals(UserSettingsManager.USER_ID_B)) {
+            setMenuForID(R.id.action_user_b);
+        }
+
+        return super.onCreateOptionsMenu(menu);
     }
 
     @Override
     public boolean onMenuItemSelected(int featureId, MenuItem item) {
-        switch (item.getItemId()) {
+        return setMenuForID(item.getItemId());
+    }
+
+    private boolean setMenuForID(int id) {
+        switch (id) {
             case R.id.action_user_a:
                 UserSettingsManager.setUserID(UserSettingsManager.USER_ID_A);
                 item1.setTitle("USER A **SELECTED");
                 item2.setTitle("USER B");
-                break;
+                checkForLoadingFragment();
+                return true;
 
             case R.id.action_user_b:
                 UserSettingsManager.setUserID(UserSettingsManager.USER_ID_B);
                 item1.setTitle("USER A");
                 item2.setTitle("USER B **SELECTED");
-                break;
+                checkForLoadingFragment();
+                return true;
+
+            default:
+                return false;
         }
-        return super.onMenuItemSelected(featureId, item);
+    }
+
+    private void requestSocketConnect() {
+        Intent openSocket = new Intent();
+        openSocket.setAction(QMiscaClientApplication.APPLICATION_CONNECT_SOCKET);
+        sendBroadcast(openSocket);
+    }
+
+    private void checkForLoadingFragment() {
+        if (getFragmentManager().findFragmentById(R.id.main_activity_fragment_container) == null)
+            loadMainFragment();
     }
 }
