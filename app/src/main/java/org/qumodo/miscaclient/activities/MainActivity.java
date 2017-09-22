@@ -21,6 +21,8 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.qumodo.data.DataManager;
 import org.qumodo.data.MediaLoader;
 import org.qumodo.data.models.GroupListItem;
@@ -32,6 +34,7 @@ import org.qumodo.miscaclient.dataProviders.MessageContentProvider;
 import org.qumodo.miscaclient.dataProviders.UserSettingsManager;
 import org.qumodo.miscaclient.fragments.MessageListFragment;
 import org.qumodo.miscaclient.fragments.QMiscaGroupsListFragment;
+import org.qumodo.network.QMessage;
 import org.qumodo.network.QMessageType;
 import org.qumodo.services.QTCPSocketService;
 
@@ -66,6 +69,11 @@ public class MainActivity extends Activity implements QMiscaGroupsListFragment.O
 
         if (savedInstanceState != null) {
             groupID = savedInstanceState.getString(BUNDLE_KEY_GROUP_ID);
+
+            if (groupID != null) {
+                ContentFrameLayout frame = (ContentFrameLayout) findViewById(R.id.main_activity_fragment_container);
+                frame.removeAllViews();
+            }
         }
 
         actionBar = getActionBar();
@@ -151,8 +159,26 @@ public class MainActivity extends Activity implements QMiscaGroupsListFragment.O
     }
 
     @Override
-    public void onSendMessage(String message) {
-        Log.d("MAIN ACTIVITY", "SEND MESSAGE " + message);
+    public QMessage onSendMessage(String message) {
+        try {
+            JSONObject data = new JSONObject();
+            data.put(QMessage.KEY_GROUP_ID, groupID);
+            data.put(QMessage.KEY_MESSAGE, message);
+            QMessage preparedMessage = new QMessage("*", UserSettingsManager.getUserID(), QMessageType.TEXT, data);
+            Log.d(TAG, "Message ready: " + preparedMessage.serialize());
+            Intent messageIntent = new Intent();
+            messageIntent.setAction(QTCPSocketService.ACTION_SEND_MESSAGE);
+            messageIntent.putExtra(QTCPSocketService.INTENT_KEY_MESSAGE, preparedMessage.serialize());
+            sendBroadcast(messageIntent);
+
+            return preparedMessage;
+
+        } catch (JSONException e) {
+            Log.e(TAG, "Error Parsing JSON for outgoing message");
+            e.printStackTrace();
+        }
+
+        return null;
     }
 
     private String messageTextForCaption;

@@ -1,16 +1,21 @@
 package org.qumodo.miscaclient.fragments;
 
 import android.app.ActionBar;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.app.Fragment;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import org.qumodo.data.MessageCenter;
 import org.qumodo.data.models.GroupListItem;
 import org.qumodo.miscaclient.R;
 import org.qumodo.miscaclient.dataProviders.GroupsContentProvider;
@@ -23,10 +28,14 @@ public class QMiscaGroupsListFragment extends Fragment {
     private int mColumnCount = 1;
     private OnListFragmentInteractionListener mListener;
 
-    /**
-     * Mandatory empty constructor for the fragment manager to instantiate the
-     * fragment (e.g. upon screen orientation changes).
-     */
+    BroadcastReceiver receiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            GroupsContentProvider.reloadData(getContext());
+            adapter.notifyDataSetChanged();
+        }
+    };
+
     public QMiscaGroupsListFragment() {
     }
 
@@ -43,6 +52,10 @@ public class QMiscaGroupsListFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(MessageCenter.RELOAD_UI);
+        getContext().registerReceiver(receiver, intentFilter);
+
         if (getArguments() != null) {
             mColumnCount = getArguments().getInt(ARG_COLUMN_COUNT);
         }
@@ -51,6 +64,8 @@ public class QMiscaGroupsListFragment extends Fragment {
         if (ab != null)
             ab.setTitle(getString(R.string.actionbar_title_messages));
     }
+
+    public QMiscaGroupsListRecyclerViewAdapter adapter;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -66,7 +81,9 @@ public class QMiscaGroupsListFragment extends Fragment {
             } else {
                 recyclerView.setLayoutManager(new GridLayoutManager(context, mColumnCount));
             }
-            recyclerView.setAdapter(new QMiscaGroupsListRecyclerViewAdapter(GroupsContentProvider.ITEMS, mListener));
+
+            adapter = new QMiscaGroupsListRecyclerViewAdapter(GroupsContentProvider.ITEMS, mListener);
+            recyclerView.setAdapter(adapter);
         }
         return view;
     }
@@ -75,6 +92,7 @@ public class QMiscaGroupsListFragment extends Fragment {
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
+
         if (context instanceof OnListFragmentInteractionListener) {
             mListener = (OnListFragmentInteractionListener) context;
         } else {

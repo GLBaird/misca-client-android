@@ -67,7 +67,6 @@ public class UserSettingsManager {
 
     public static void loadSharedPreferences(Context context) {
         mSharedPreferences = context.getSharedPreferences(USER_PREFERENCES, 0);
-        Log.d(TAG, "USER PREFS LOADED? " + mSharedPreferences);
     }
 
     @Nullable

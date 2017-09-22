@@ -21,11 +21,7 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 
-/**
- * {@link RecyclerView.Adapter} that can display a {@link Message} and makes a call to the
- * specified {@link MessageListFragment.OnMessageListInteractionListener}.
- * TODO: Replace the implementation with code for your data type.
- */
+
 public class MessageRecyclerViewAdapter extends RecyclerView.Adapter<MessageRecyclerViewAdapter.ViewHolder> {
 
     private final List<Message> mValues;

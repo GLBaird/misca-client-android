@@ -1,7 +1,10 @@
 package org.qumodo.miscaclient.fragments;
 
 import android.app.ActionBar;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.app.Fragment;
@@ -14,15 +17,18 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.qumodo.data.DataManager;
+import org.qumodo.data.MessageCenter;
 import org.qumodo.data.models.Group;
 import org.qumodo.data.models.Message;
 import org.qumodo.miscaclient.R;
 import org.qumodo.miscaclient.dataProviders.MessageContentProvider;
 import org.qumodo.miscaclient.dataProviders.UserSettingsManager;
+import org.qumodo.network.QMessage;
 import org.qumodo.network.QMessageType;
 
 import java.util.Date;
@@ -43,6 +49,15 @@ public class MessageListFragment extends Fragment implements View.OnClickListene
     private Button cameraButton;
     private Button sendButton;
     MessageRecyclerViewAdapter adapter;
+    private BroadcastReceiver receiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent.getAction().equals(MessageCenter.RELOAD_UI)) {
+                adapter.notifyDataSetChanged();
+                recyclerView.scrollToPosition(MessageContentProvider.ITEMS.size() - 1);
+            }
+        }
+    };
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -70,6 +85,10 @@ public class MessageListFragment extends Fragment implements View.OnClickListene
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        IntentFilter receiverIntent = new IntentFilter();
+        receiverIntent.addAction(MessageCenter.RELOAD_UI);
+        getContext().registerReceiver(receiver, receiverIntent);
+
         if (getArguments() != null) {
             mColumnCount = getArguments().getInt(ARG_COLUMN_COUNT);
         }
@@ -79,6 +98,8 @@ public class MessageListFragment extends Fragment implements View.OnClickListene
             ab.setTitle(group.getName());
         }
     }
+
+    private RecyclerView recyclerView;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -98,7 +119,7 @@ public class MessageListFragment extends Fragment implements View.OnClickListene
         // Set the adapter
         if (rView instanceof RecyclerView) {
             Context context = rView.getContext();
-            RecyclerView recyclerView = (RecyclerView) rView;
+            recyclerView = (RecyclerView) rView;
 
             if (mColumnCount <= 1) {
                 recyclerView.setLayoutManager(new LinearLayoutManager(context));
@@ -107,6 +128,7 @@ public class MessageListFragment extends Fragment implements View.OnClickListene
             }
             adapter = new MessageRecyclerViewAdapter(MessageContentProvider.ITEMS, mListener);
             recyclerView.setAdapter(adapter);
+            recyclerView.scrollToPosition(MessageContentProvider.ITEMS.size() - 1);
         }
         return view;
     }
@@ -136,13 +158,20 @@ public class MessageListFragment extends Fragment implements View.OnClickListene
     }
 
     private void sendMessage(String message) {
-        DataManager dm = new DataManager(getContext());
-        MessageContentProvider.addItem(
-                dm.addNewMessage(message, QMessageType.TEXT, group.getId(), null, null, null)
-        );
-        adapter.notifyItemInserted(MessageContentProvider.ITEMS.size() - 1);
-
-        mListener.onSendMessage(message);
+        QMessage messageSent = mListener.onSendMessage(message);
+        if (messageSent != null) {
+            DataManager dm = new DataManager(getContext());
+            MessageContentProvider.addItem(
+                    dm.addNewMessage(message, QMessageType.TEXT, group.getId(), messageSent.id, messageSent.from, new Date(messageSent.ts))
+            );
+            adapter.notifyItemInserted(MessageContentProvider.ITEMS.size() - 1);
+            Intent updateUI = new Intent();
+            updateUI.setAction(MessageCenter.RELOAD_UI);
+            getContext().sendBroadcast(updateUI);
+        } else {
+            Toast.makeText(getContext(), "Failed to send message", Toast.LENGTH_SHORT)
+                 .show();
+        }
     }
 
     @Override
@@ -169,7 +198,7 @@ public class MessageListFragment extends Fragment implements View.OnClickListene
     }
 
     public interface OnMessageListInteractionListener {
-        void onSendMessage(String message);
+        QMessage onSendMessage(String message);
         void onOpenCameraIntent(String caption);
         void onOpenImageGalleryIntent(String caption);
     }

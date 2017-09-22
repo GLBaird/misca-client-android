@@ -247,15 +247,14 @@ public class DataManager {
     }
 
     public Message addNewMessage(String text, QMessageType type, String groupID, String id, String from, Date ts) {
-        if (id == null) {
-            id = UUID.randomUUID().toString();
-        }
         try {
             JSONObject data = new JSONObject();
             data.put("text", text);
             String userID = UserSettingsManager.getUserID();
+            Log.d("Data Manager", "From and User ID " + from +" USERID " + userID);
+
             Message newMessage = new Message(
-                id,
+                id == null ? UUID.randomUUID().toString() : id,
                 from == null ? userID : from,
                 groupID,
                 ts == null ? new Date().getTime() : ts.getTime(),
@@ -269,10 +268,11 @@ public class DataManager {
             cv.put(Messages.MessagesEntry._ID, newMessage.getId());
             cv.put(Messages.MessagesEntry.COLUMN_NAME_TYPE, newMessage.getType().value);
             cv.put(Messages.MessagesEntry.COLUMN_NAME_GROUP_ID, groupID);
-            cv.put(Messages.MessagesEntry.COLUMN_NAME_FROM_ID, userID);
+            cv.put(Messages.MessagesEntry.COLUMN_NAME_FROM_ID, from == null ? userID : from);
             cv.put(Messages.MessagesEntry.COLUMN_NAME_DATA, data.toString());
             cv.put(Messages.MessagesEntry.COLUMN_NAME_TS, newMessage.getTS());
             cv.put(Messages.MessagesEntry.COLUMN_NAME_VIEWED, 1);
+            cv.put(Messages.MessagesEntry.COLUMN_NAME_SEND_ERROR, false);
 
             SQLiteDatabase db = helper.getWritableDatabase();
             db.insert(Messages.MessagesEntry.TABLE_NAME, null, cv);

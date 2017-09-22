@@ -13,14 +13,7 @@ import java.util.Map;
 
 public class GroupsContentProvider {
 
-    /**
-     * An array of sample (dummy) items.
-     */
     public static final List<GroupListItem> ITEMS = new ArrayList<>();
-
-    /**
-     * A map of sample (dummy) items, by ID.
-     */
     public static final Map<String, GroupListItem> ITEM_MAP = new HashMap<>();
 
     public static void setup(Context context){
@@ -29,6 +22,12 @@ public class GroupsContentProvider {
         for (GroupListItem val: vals) {
             addItem(val);
         }
+    }
+
+    public static void reloadData(Context context) {
+        ITEMS.clear();
+        ITEM_MAP.clear();
+        setup(context);
     }
 
     private static void addItem(GroupListItem item) {

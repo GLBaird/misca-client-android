@@ -19,6 +19,8 @@ import java.util.Date;
 
 public class MessageCenter {
 
+    public static final String TAG = "MessageCenter";
+
     public static final String USER_AUTHORISED = "org.qumodo.data.MessageCenter.UserAuthorised";
     public static final String RELOAD_UI = "org.qumodo.data.MessageCenter.ReloadUI";
     public static final String INTENT_KEY_GROUP_ID = "org.qumodo.data.MessageCenter.GroupID";
@@ -33,6 +35,7 @@ public class MessageCenter {
 
             switch (action) {
                 case QTCPSocketService.DELEGATE_RECEIVED_MESSAGE:
+                    Log.d(TAG, "Message Received");
                     message = intent.getStringExtra(QTCPSocketService.INTENT_KEY_MESSAGE);
                     if (message != null && !message.isEmpty())
                         checkMessageContent(message);
@@ -46,7 +49,7 @@ public class MessageCenter {
         }
     };
 
-    MessageCenter(Context context) {
+    public MessageCenter(Context context) {
         appContext = context.getApplicationContext();
 
         IntentFilter filter = new IntentFilter();
@@ -57,9 +60,10 @@ public class MessageCenter {
     }
 
     private void checkMessageContent(String message) {
+        Log.d(TAG, "Message data received: " + message);
         QMessage parsed = parseMessage(message);
         if (parsed != null) {
-            if (parsed.type == QMessageType.NEW_CONNECTION) {
+            if (parsed.type == QMessageType.AUTHENTICATION) {
                 getUserAuthenticationDetails(parsed);
             } else if (parsed.type == QMessageType.TEXT) {
                 parseTextMessage(parsed);
@@ -69,6 +73,10 @@ public class MessageCenter {
                 parseMiscaMessage(parsed);
             } else if (parsed.type == QMessageType.COMMAND) {
                 parseSystemCommand(parsed);
+            } else if (parsed.type == QMessageType.ERROR) {
+                Log.d(TAG, "Error from socket: " + parsed);
+            } else if (parsed.type == QMessageType.STATUS) {
+                Log.d(TAG, "Status Message from Socket: " + parsed);
             }
         }
     }
@@ -87,10 +95,12 @@ public class MessageCenter {
                 appContext.sendBroadcast(userAuthorised);
             } else {
                 UserSettingsManager.setUserAuthorised(false);
+                Log.e(TAG, "Failed user authentication");
                 Toast.makeText(appContext, "Failed user authentication", Toast.LENGTH_SHORT)
                      .show();
             }
         } catch (JSONException e) {
+            Log.e(TAG, "Failed to parse message repose for authentication");
             e.printStackTrace();
             Toast.makeText(appContext, "Failed to parse message response!", Toast.LENGTH_SHORT)
                  .show();
@@ -101,7 +111,6 @@ public class MessageCenter {
         try {
             String messageText = message.data.getString(QMessage.KEY_MESSAGE);
             String groupID = message.data.getString(QMessage.KEY_GROUP_ID);
-
             DataManager dm = new DataManager(appContext);
             Message newMessage = dm.addNewMessage(messageText, message.type, groupID, message.id, message.from, new Date(message.ts));
             MessageContentProvider.addItem(newMessage);

@@ -4,7 +4,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Date;
 import java.util.Formatter;
+import java.util.UUID;
 
 public class QMessage {
 
@@ -13,13 +15,13 @@ public class QMessage {
     public String from;
     public QMessageType type;
     public JSONObject data;
-    public int ts;
+    public long ts;
 
     public static final String KEY_DEVICE_ID = "deviceID";
-    public static final String KEY_PUBLIC_KEY_HASH = "publicKeyHash";
+    public static final String KEY_PUBLIC_KEY_HASH = "certificate";
     public static final String KEY_PASS_PHRASE = "passPhrase";
     public static final String KEY_GROUP_ID = "groupID";
-    public static final String KEY_USER_AUTHENTICATION = "userAuthentication";
+    public static final String KEY_USER_AUTHENTICATION = "authenticated";
     public static final String KEY_MISCA_ID = "miscaID";
     public static final String KEY_MESSAGE = "message";
     public static final String KEY_CAPTION = "caption";
@@ -36,15 +38,15 @@ public class QMessage {
         for (int i = 0; i < to.length; i++) {
             to[i] = toArray.optString(i);
         }
-        return new QMessage(parsed.getString("id"), to, parsed.getString("from"), parsed.getInt("type"), data, parsed.getInt("ts"));
+        return new QMessage(parsed.getString("id"), to, parsed.getString("from"), parsed.getInt("type"), data, parsed.getLong("ts"));
     }
 
     private static String getUUID() {
-        return "";
+        return UUID.randomUUID().toString();
     }
 
-    private static int getTimeStamp() {
-        return 0;
+    private static long getTimeStamp() {
+        return new Date().getTime();
     }
 
     public QMessage() {
@@ -66,11 +68,11 @@ public class QMessage {
         this(getUUID(), new String[]{to}, from, type, data, getTimeStamp());
     }
 
-    public QMessage(String id, String[] to, String from, int type, JSONObject data, int ts) {
+    public QMessage(String id, String[] to, String from, int type, JSONObject data, long ts) {
         this(id, to, from, QMessageType.conform(type), data, ts);
     }
 
-    public QMessage(String id, String[] to, String from, QMessageType type, JSONObject data, int ts) {
+    public QMessage(String id, String[] to, String from, QMessageType type, JSONObject data, long ts) {
         this.id = id;
         this.to = to;
         this.from = from;

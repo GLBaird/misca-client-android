@@ -165,9 +165,7 @@ public class QTCPSocketService extends Service implements Runnable, QClientSocke
     public void run() {
         Log.d(LOG_TAG, "Service Run Invoked");
         socketClient.makeConnection();
-        Log.d(LOG_TAG, "Running");
         while (running) {
-            Log.d(LOG_TAG, "** RUN **");
             socketClient.readInputStream();
         }
     }

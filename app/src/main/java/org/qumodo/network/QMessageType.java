@@ -14,6 +14,8 @@ public enum QMessageType {
     NEW_CONNECTION(10),
     SIGN_UP(11),
     ADD_DEVICE(12),
+    STATUS(13),
+    AUTHENTICATION(14),
     UNKNOWN(100);
 
     public int value;
@@ -46,6 +48,10 @@ public enum QMessageType {
                 return "signUp";
             case 12:
                 return "addDevice";
+            case 13:
+                return "status";
+            case 14:
+                return "authentication";
             default:
                 return "unknown";
         }
