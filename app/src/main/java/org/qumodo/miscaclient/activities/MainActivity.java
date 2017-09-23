@@ -250,6 +250,7 @@ public class MainActivity extends Activity implements QMiscaGroupsListFragment.O
             MessageListFragment messageListFragment = (MessageListFragment) fragment;
             messageListFragment.loadNewMessage(newPictureMessage);
         }
+        MediaLoader.uploadImageToServer(newImageID);
 
         messageTextForCaption = null;
         newImageID = null;

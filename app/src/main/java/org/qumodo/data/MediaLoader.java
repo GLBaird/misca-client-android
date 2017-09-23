@@ -1,6 +1,7 @@
 package org.qumodo.data;
 
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.ContextWrapper;
 import android.graphics.Bitmap;
@@ -13,20 +14,38 @@ import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
 import android.media.ExifInterface;
 import android.os.AsyncTask;
+import android.util.Base64;
 import android.util.Log;
+import android.widget.Toast;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.qumodo.miscaclient.R;
+import org.qumodo.miscaclient.dataProviders.UserSettingsManager;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Scanner;
+import java.util.TimeZone;
 import java.util.UUID;
+
 
 public class MediaLoader {
 
     private static Context appContext;
+    public static final String TAG = "MediaLoader";
+
     public static void setContext(Context context) {
         appContext = context.getApplicationContext();
     }
@@ -190,6 +209,11 @@ public class MediaLoader {
         return imageID;
     }
 
+    public static void uploadImageToServer(String imageID) {
+        UploadImageToServer uploadTask = new UploadImageToServer(appContext);
+        uploadTask.execute(imageID, appContext.getString(R.string.online_image_message_route));
+    }
+
     private static class LoadMessageImage extends AsyncTask<String, String, Bitmap> {
 
         String messageID;
@@ -220,6 +244,106 @@ public class MediaLoader {
                 listener.imageHasLoaded(messageID, bitmap);
             } else {
                 listener.imageHasFailedToLoad(messageID);
+            }
+        }
+    }
+
+    private static class UploadImageToServer extends AsyncTask<String, Void, Boolean> {
+
+        private Context context;
+
+        UploadImageToServer(Context context) {
+            this.context = context;
+        }
+
+        private String getISODateString() {
+            TimeZone tz = TimeZone.getTimeZone("UTC");
+            @SuppressLint("SimpleDateFormat") DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'");
+            df.setTimeZone(tz);
+            return df.format(new Date());
+        }
+
+        private String loadImageData(String messageID) {
+            File imageFile = getImageFile(messageID, IMAGE_STORE_UPLOADS, context);
+            Bitmap image = BitmapFactory.decodeFile(imageFile.getAbsolutePath());
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            image.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+            byte[] byteArrayImage = baos.toByteArray();
+            return Base64.encodeToString(byteArrayImage, Base64.DEFAULT);
+        }
+
+        private String packImageDataIntoUMF(String messageID, String serviceAPI) {
+            try {
+                JSONObject message = new JSONObject();
+                message.put("mid", UUID.randomUUID().toString());
+                message.put("to", "[post]"+serviceAPI+"/"+messageID);
+                message.put("from", "uid:"+UserSettingsManager.getUserID());
+                message.put("version", "UMF/1.3");
+                message.put("timestamp", getISODateString());
+
+                JSONObject body = new JSONObject();
+                body.put("type", "private:message");
+                body.put("contentType", "text/plain");
+                body.put("base64", "TEST");
+
+                message.put("body", body);
+
+                return message.toString();
+            } catch (JSONException e) {
+                Log.e(TAG, "Error forming JSON data for UMF");
+                e.printStackTrace();
+            }
+
+            return null;
+        }
+
+        @Override
+        protected Boolean doInBackground(String... params) {
+            Log.d(TAG, "Starting image upload");
+            String messageID = params[0];
+            String apiRoute  = params[1];
+            String umf = packImageDataIntoUMF(messageID, apiRoute);
+            if (umf != null && messageID != null && apiRoute != null) {
+                try {
+                    URL imageStoreURL = new URL(
+                        appContext.getString(R.string.online_image_hostname)
+                            + ":" + appContext.getResources().getInteger(R.integer.online_image_store_port)
+                            + apiRoute + messageID
+                    );
+
+                    HttpURLConnection connection = (HttpURLConnection) imageStoreURL.openConnection();
+                    connection.setRequestProperty("User-Agent", "");
+                    connection.setRequestProperty("userID", UserSettingsManager.getUserID());
+                    connection.setRequestProperty("User-Certificate", UserSettingsManager.getHashedClientPublicKeyString());
+                    connection.setRequestMethod("POST");
+                    connection.setDoInput(true);
+                    connection.setDoOutput(true);
+                    connection.connect();
+
+                    OutputStream output = connection.getOutputStream();
+                    output.write(umf.getBytes());
+                    output.close();
+
+                    Scanner result = new Scanner(connection.getInputStream());
+                    String response = result.nextLine();
+                    result.close();
+
+                    Log.d("Media Loader", response);
+
+                } catch (IOException e) {
+                    Log.d(TAG, "Failed to upload image");
+                    e.printStackTrace();
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        @Override
+        protected void onPostExecute(Boolean success) {
+            if (!success) {
+                Toast.makeText(appContext, "Failed to upload image to server", Toast.LENGTH_SHORT)
+                        .show();
             }
         }
     }

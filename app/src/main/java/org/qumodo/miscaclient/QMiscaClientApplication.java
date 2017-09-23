@@ -17,12 +17,12 @@ import org.qumodo.network.QMessage;
 import org.qumodo.network.QMessageType;
 import org.qumodo.services.QTCPSocketService;
 
-public class    QMiscaClientApplication extends Application {
+public class QMiscaClientApplication extends Application {
 
     private static final String TAG = "QMiscaClientApplication";
 
-    private static final int port = 9500;
-    private static final String hostname = "192.168.0.104";
+    private static int port;
+    private static String hostname;
     public static final String APPLICATION_TEAR_SOCKET_DOWN = "org.qumodo.misca.QMiscaClientApplication.TEAR_DOWN_SOCKET";
     public static final String APPLICATION_CONNECT_SOCKET = "org.qumodo.misca.QMiscaClientApplication.CONNECT_SOCKET";
     public Boolean socketServiceActive = true;
@@ -100,6 +100,9 @@ public class    QMiscaClientApplication extends Application {
         filter.addAction(APPLICATION_CONNECT_SOCKET);
         filter.addAction(APPLICATION_TEAR_SOCKET_DOWN);
         registerReceiver(receiver, filter);
+
+        hostname = getString(R.string.online_socket_hostname);
+        port = getResources().getInteger(R.integer.online_socket_port);
 
         UserSettingsManager.loadSharedPreferences(getApplicationContext());
         setupDataProviders();
