@@ -165,6 +165,7 @@ public class MainActivity extends Activity implements QMiscaGroupsListFragment.O
             data.put(QMessage.KEY_GROUP_ID, groupID);
             data.put(QMessage.KEY_MESSAGE, message);
             QMessage preparedMessage = new QMessage("*", UserSettingsManager.getUserID(), QMessageType.TEXT, data);
+
             Log.d(TAG, "Message ready: " + preparedMessage.serialize());
             Intent messageIntent = new Intent();
             messageIntent.setAction(QTCPSocketService.ACTION_SEND_MESSAGE);
@@ -307,6 +308,9 @@ public class MainActivity extends Activity implements QMiscaGroupsListFragment.O
 
     private boolean setMenuForID(int id) {
         switch (id) {
+            case android.R.id.home:
+                getFragmentManager().popBackStack();
+                return true;
             case R.id.action_user_a:
                 UserSettingsManager.setUserID(UserSettingsManager.USER_ID_A);
                 item1.setTitle("USER A **SELECTED");
