@@ -15,6 +15,9 @@ import org.qumodo.network.QMessage;
 import org.qumodo.services.QTCPSocketService;
 import org.qumodo.network.QMessageType;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.util.Date;
 
 public class MessageCenter {
@@ -23,6 +26,7 @@ public class MessageCenter {
 
     public static final String USER_AUTHORISED = "org.qumodo.data.MessageCenter.UserAuthorised";
     public static final String RELOAD_UI = "org.qumodo.data.MessageCenter.ReloadUI";
+    public static final String NEW_LIST_ITEM = "org.qumodo.date.MessageCenter.NewListItem";
     public static final String INTENT_KEY_GROUP_ID = "org.qumodo.data.MessageCenter.GroupID";
 
     private static Context appContext;
@@ -109,15 +113,25 @@ public class MessageCenter {
 
     private void parseTextMessage(QMessage message) {
         try {
-            String messageText = message.data.getString(QMessage.KEY_MESSAGE);
+            String messageText = null;
+            try {
+                messageText = URLDecoder.decode(message.data.getString(QMessage.KEY_MESSAGE), "UTF-8");
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+                messageText = message.data.getString(QMessage.KEY_MESSAGE);
+            }
             String groupID = message.data.getString(QMessage.KEY_GROUP_ID);
             DataManager dm = new DataManager(appContext);
             Message newMessage = dm.addNewMessage(messageText, message.type, groupID, message.id, message.from, new Date(message.ts));
-            MessageContentProvider.addItem(newMessage);
-            Intent updateUI = new Intent();
-            updateUI.setAction(RELOAD_UI);
-            updateUI.putExtra(QMessage.KEY_GROUP_ID, groupID);
-            appContext.sendBroadcast(updateUI);
+
+            String currentGroupID = MessageContentProvider.getGroupID();
+            if (currentGroupID != null && currentGroupID.equals(groupID)) {
+                MessageContentProvider.addItem(newMessage);
+                Intent updateUI = new Intent();
+                updateUI.setAction(NEW_LIST_ITEM);
+                updateUI.putExtra(QMessage.KEY_GROUP_ID, groupID);
+                appContext.sendBroadcast(updateUI);
+            }
         } catch (JSONException e) {
             e.printStackTrace();
         }

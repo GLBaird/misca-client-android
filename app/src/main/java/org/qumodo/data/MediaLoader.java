@@ -14,6 +14,7 @@ import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
 import android.media.ExifInterface;
 import android.os.AsyncTask;
+import android.support.annotation.NonNull;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -21,6 +22,7 @@ import org.qumodo.miscaclient.R;
 import org.qumodo.miscaclient.dataProviders.UserSettingsManager;
 import org.qumodo.miscaclient.fragments.MessageListFragment;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -29,6 +31,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.UUID;
 
@@ -218,6 +221,50 @@ public class MediaLoader {
             this.listener = listener;
         }
 
+        private Bitmap downloadImageFromServer(String apiRoute, String imageStore) {
+            if (messageID != null) {
+                try {
+                    URL imageStoreURL = getMessageImageURL(messageID, apiRoute);
+
+                    HttpURLConnection connection = (HttpURLConnection) imageStoreURL.openConnection();
+                    connection.setRequestProperty("User-Agent", "MISCA");
+                    connection.setRequestProperty("userID", UserSettingsManager.getUserID());
+                    connection.setRequestProperty("User-Certificate", UserSettingsManager.getHashedClientPublicKeyString());
+                    connection.setRequestProperty("Content-Type", "image/jpeg");
+                    connection.setDoInput(true);
+                    connection.setRequestMethod("POST");
+                    connection.setUseCaches(false);
+                    connection.connect();
+
+                    int responseCode = connection.getResponseCode();
+
+                    if (responseCode == 200) {
+                        BufferedInputStream in = new BufferedInputStream(connection.getInputStream());
+                        int downloaded = 0, total = in.available();
+                        byte[] imageBytes = new byte[total];
+                        downloaded = in.read(imageBytes, 0, in.available());
+                        in.close();
+
+                        if (downloaded == total) {
+                            File outputFile = getImageFile(messageID, imageStore, appContext);
+                            FileOutputStream fos = new FileOutputStream(outputFile);
+                            fos.write(imageBytes);
+                            fos.flush();
+                            fos.close();
+                        }
+
+                        return BitmapFactory.decodeByteArray(imageBytes, 0, total);
+                    }
+
+                } catch (IOException e) {
+                    Log.d(TAG, "Failed to download image");
+                    e.printStackTrace();
+                }
+            }
+
+            return null;
+        }
+
         @Override
         protected Bitmap doInBackground(String... params) {
             File imageFile = getImageFile(messageID, IMAGE_STORE_UPLOADS, context);
@@ -225,9 +272,12 @@ public class MediaLoader {
 
             if (file != null) {
                 file = fixImageOrientation(imageFile.getAbsolutePath(), file, true);
+            } else {
+                String apiRoute = appContext.getString(R.string.online_image_message_route);
+                file = downloadImageFromServer(apiRoute, IMAGE_STORE_UPLOADS);
             }
 
-            return file;
+            return file != null ? file : BitmapFactory.decodeResource(context.getResources(), R.drawable.sample_image);
         }
 
         @Override
@@ -267,14 +317,10 @@ public class MediaLoader {
 
             if (messageID != null && apiRoute != null) {
                 try {
-                    URL imageStoreURL = new URL(
-                        appContext.getString(R.string.online_image_hostname)
-                            + ":" + appContext.getResources().getInteger(R.integer.online_image_store_port)
-                            + apiRoute + messageID
-                    );
+                    URL imageStoreURL = getMessageImageURL(messageID, apiRoute);
 
                     HttpURLConnection connection = (HttpURLConnection) imageStoreURL.openConnection();
-                    connection.setRequestProperty("User-Agent", "");
+                    connection.setRequestProperty("User-Agent", "MISCA");
                     connection.setRequestProperty("userID", UserSettingsManager.getUserID());
                     connection.setRequestProperty("User-Certificate", UserSettingsManager.getHashedClientPublicKeyString());
                     connection.setRequestProperty("Content-Type", "image/jpeg");
@@ -314,6 +360,15 @@ public class MediaLoader {
                 appContext.sendBroadcast(updateUI);
             }
         }
+    }
+
+    @NonNull
+    private static URL getMessageImageURL(String messageID, String apiRoute) throws MalformedURLException {
+        return new URL(
+            appContext.getString(R.string.online_image_hostname)
+                + ":" + appContext.getResources().getInteger(R.integer.online_image_store_port)
+                + apiRoute + messageID
+        );
     }
 
 }

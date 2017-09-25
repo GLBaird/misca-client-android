@@ -14,24 +14,23 @@ import java.util.Map;
 
 public class MessageContentProvider {
 
-    /**
-     * An array of sample (dummy) items.
-     */
+    private static String groupID;
     public static final List<Message> ITEMS = new ArrayList<>();
-
-    /**
-     * A map of sample (dummy) items, by ID.
-     */
     public static final Map<String, Message> ITEM_MAP = new HashMap<>();
 
     public static void setup(Context context, String groupID){
         ITEMS.clear();
         ITEM_MAP.clear();
+        MessageContentProvider.groupID = groupID;
         DataManager dm = new DataManager(context);
         List<Message> vals = dm.getMessages(groupID);
         for (Message val: vals) {
             addItem(val);
         }
+    }
+
+    public static String getGroupID() {
+        return groupID;
     }
 
     public static int unreadMessagesInGroup(Context context, String groupID) {

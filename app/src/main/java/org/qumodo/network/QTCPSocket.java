@@ -81,7 +81,7 @@ public class QTCPSocket {
     private void setupBuffers() throws IOException {
         Log.d(LOG_TAG, "Creating input and output buffers");
         os = socket.getOutputStream();
-        is = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        is = new BufferedReader(new InputStreamReader(socket.getInputStream(), "utf-8"));
     }
 
     public void sendMessage(String message) {
@@ -95,7 +95,7 @@ public class QTCPSocket {
         protected String doInBackground(String... messages) {
             for (String message : messages) {
                 try {
-                    os.write(message.getBytes());
+                    os.write(message.getBytes("utf-8"));
                     os.flush();
                 } catch (IOException e) {
                     Log.e(LOG_TAG, "Error sending message from socket");

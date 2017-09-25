@@ -12,7 +12,7 @@
         android:id="@+id/list"
         android:name="org.qumodo.miscaclient.fragments.MessageListFragment"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="0dp"
         android:layout_alignParentTop="true"
         android:layout_above="@+id/text_entry"
         android:layout_marginLeft="0dp"

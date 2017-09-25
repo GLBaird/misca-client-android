@@ -6,13 +6,16 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.graphics.Rect;
 import android.os.Bundle;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
@@ -26,10 +29,12 @@ import org.qumodo.miscaclient.dataProviders.MessageContentProvider;
 import org.qumodo.network.QMessage;
 import org.qumodo.network.QMessageType;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.Date;
 
 
-public class MessageListFragment extends Fragment implements View.OnClickListener, View.OnLongClickListener {
+public class MessageListFragment extends Fragment implements View.OnClickListener, View.OnLongClickListener, ViewTreeObserver.OnGlobalLayoutListener {
 
     public static final String TAG = "MessageListFragment";
     public static final String ACTION_LAST_IMAGE_LOADED = "org.qumodo.misca.MessageListFragment.ActionLastImageLoaded";
@@ -46,20 +51,25 @@ public class MessageListFragment extends Fragment implements View.OnClickListene
     private BroadcastReceiver receiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
+            int messageCount = MessageContentProvider.ITEMS.size();
             switch (intent.getAction()) {
                 case ACTION_LAST_IMAGE_LOADED:
                     int itemLoaded = intent.getIntExtra(INTENT_LIST_ITEM_LOADED, 0);
-                    int listItems = MessageContentProvider.ITEMS.size();
-                    if ((itemLoaded == listItems - 2 && imageLoadCount <= 1)
-                            || (itemLoaded == listItems -1 && imageLoadCount == 0)) {
+                    if ((itemLoaded == messageCount - 2 && imageLoadCount <= 1)
+                            || (itemLoaded == messageCount -1 && imageLoadCount == 0)) {
                         imageLoadCount++;
-                        recyclerView.scrollToPosition(MessageContentProvider.ITEMS.size() - 1);
+                        recyclerView.scrollToPosition(messageCount - 1);
                     }
+                    break;
+                case MessageCenter.NEW_LIST_ITEM:
+                    adapter.notifyItemInserted(messageCount - 1);
+                    recyclerView.scrollToPosition(messageCount - 1);
                     break;
                 case MessageCenter.RELOAD_UI:
                     adapter.notifyDataSetChanged();
+                    break;
                 case ACTION_IMAGE_ADDED:
-                    recyclerView.scrollToPosition(MessageContentProvider.ITEMS.size() - 1);
+                    recyclerView.scrollToPosition(messageCount - 1);
                     break;
             }
         }
@@ -88,6 +98,7 @@ public class MessageListFragment extends Fragment implements View.OnClickListene
 
         IntentFilter receiverIntent = new IntentFilter();
         receiverIntent.addAction(MessageCenter.RELOAD_UI);
+        receiverIntent.addAction(MessageCenter.NEW_LIST_ITEM);
         receiverIntent.addAction(ACTION_LAST_IMAGE_LOADED);
         receiverIntent.addAction(ACTION_IMAGE_ADDED);
         getContext().registerReceiver(receiver, receiverIntent);
@@ -116,6 +127,9 @@ public class MessageListFragment extends Fragment implements View.OnClickListene
 
         cameraButton.setOnClickListener(this);
         sendButton.setOnClickListener(this);
+
+        view.getViewTreeObserver().addOnGlobalLayoutListener(this);
+
 
         cameraButton.setOnLongClickListener(this);
 
@@ -169,7 +183,7 @@ public class MessageListFragment extends Fragment implements View.OnClickListene
             );
             adapter.notifyItemInserted(MessageContentProvider.ITEMS.size() - 1);
             Intent updateUI = new Intent();
-            updateUI.setAction(MessageCenter.RELOAD_UI);
+            updateUI.setAction(MessageCenter.NEW_LIST_ITEM);
             getContext().sendBroadcast(updateUI);
         } else {
             Toast.makeText(getContext(), "Failed to send message", Toast.LENGTH_SHORT)
@@ -198,6 +212,26 @@ public class MessageListFragment extends Fragment implements View.OnClickListene
     public boolean onLongClick(View v) {
         mListener.onOpenImageGalleryIntent(getTextEntryAndClear());
         return true;
+    }
+
+    private boolean layoutForKeyboard = false;
+
+    @Override
+    public void onGlobalLayout() {
+        Rect r = new Rect();
+        //r will be populated with the coordinates of your view that area still visible.
+        View view = getView();
+        if (view != null) {
+            view.getWindowVisibleDisplayFrame(r);
+
+            int heightDiff = view.getRootView().getHeight() - (r.bottom - r.top);
+            if (heightDiff > 500 && !layoutForKeyboard) { // if more than 100 pixels, its probably a keyboard...
+                recyclerView.scrollToPosition(MessageContentProvider.ITEMS.size() - 1);
+                layoutForKeyboard = true;
+            } else if (layoutForKeyboard) {
+                layoutForKeyboard =false;
+            }
+        }
     }
 
     public interface OnMessageListInteractionListener {

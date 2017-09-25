@@ -44,6 +44,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.UUID;
 
 import static android.R.attr.bitmap;
@@ -163,7 +165,14 @@ public class MainActivity extends Activity implements QMiscaGroupsListFragment.O
         try {
             JSONObject data = new JSONObject();
             data.put(QMessage.KEY_GROUP_ID, groupID);
-            data.put(QMessage.KEY_MESSAGE, message);
+            String encodedMessage;
+            try {
+                encodedMessage = URLEncoder.encode(message, "UTF-8");
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+                encodedMessage = message;
+            }
+            data.put(QMessage.KEY_MESSAGE, encodedMessage);
             QMessage preparedMessage = new QMessage("*", UserSettingsManager.getUserID(), QMessageType.TEXT, data);
 
             Log.d(TAG, "Message ready: " + preparedMessage.serialize());
