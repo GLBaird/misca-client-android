@@ -26,12 +26,11 @@ public class GroupListItem {
 
         try {
             JSONObject parsed = new JSONObject(data);
-            lastMessageText = lastMessageType == QMessageType.PICTURE ? parsed.getString("caption") : parsed.getString("text");
+            lastMessageText = lastMessageType == QMessageType.PICTURE ? "Image Message" : parsed.getString("text"); // ignoring caption for now as not actually being sent
         } catch (JSONException e) {
             lastMessageText = "";
-            Log.e("GROUP", "JSON Parse Error");
-            e.printStackTrace();
         }
+
         long timestamp = cursor.getLong(cursor.getColumnIndex(Messages.MessagesEntry.COLUMN_NAME_TS));
         lastMessageTime = DateUtils.getRelativeTimeSpanString(timestamp, System.currentTimeMillis(), DateUtils.SECOND_IN_MILLIS).toString();
         lastMessageFromID = cursor.getString(cursor.getColumnIndex(Messages.MessagesEntry.COLUMN_NAME_FROM_ID));

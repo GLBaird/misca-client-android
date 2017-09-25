@@ -18,9 +18,12 @@ import android.support.annotation.NonNull;
 import android.util.Log;
 import android.widget.Toast;
 
+import org.json.JSONException;
 import org.qumodo.miscaclient.R;
 import org.qumodo.miscaclient.dataProviders.UserSettingsManager;
 import org.qumodo.miscaclient.fragments.MessageListFragment;
+import org.qumodo.network.QMessage;
+import org.qumodo.services.QTCPSocketService;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -33,7 +36,10 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.UUID;
+
+import javax.net.ssl.HttpsURLConnection;
 
 
 public class MediaLoader {
@@ -204,9 +210,21 @@ public class MediaLoader {
         return imageID;
     }
 
-    public static void uploadImageToServer(String imageID) {
-        UploadImageToServer uploadTask = new UploadImageToServer(appContext);
-        uploadTask.execute(imageID, appContext.getString(R.string.online_image_message_route));
+    public static void uploadImageToServer(String imageID, QMessage imageMessage) {
+        String messageText;
+        try {
+            messageText = imageMessage.serialize();
+        } catch (JSONException e) {
+            e.printStackTrace();
+            messageText = null;
+        }
+        if (messageText != null) {
+            UploadImageToServer uploadTask = new UploadImageToServer(appContext);
+            uploadTask.execute(imageID, appContext.getString(R.string.online_image_message_route), messageText);
+        } else {
+            Toast.makeText(appContext, "Failed to create image message to upload!", Toast.LENGTH_SHORT)
+                 .show();
+        }
     }
 
     private static class LoadMessageImage extends AsyncTask<String, String, Bitmap> {
@@ -226,42 +244,37 @@ public class MediaLoader {
                 try {
                     URL imageStoreURL = getMessageImageURL(messageID, apiRoute);
 
+                    Log.d(TAG, "Downloading from " + imageStoreURL.toString());
+
                     HttpURLConnection connection = (HttpURLConnection) imageStoreURL.openConnection();
                     connection.setRequestProperty("User-Agent", "MISCA");
                     connection.setRequestProperty("userID", UserSettingsManager.getUserID());
                     connection.setRequestProperty("User-Certificate", UserSettingsManager.getHashedClientPublicKeyString());
-                    connection.setRequestProperty("Content-Type", "image/jpeg");
-                    connection.setDoInput(true);
-                    connection.setRequestMethod("POST");
-                    connection.setUseCaches(false);
-                    connection.connect();
 
-                    int responseCode = connection.getResponseCode();
+                    int response = connection.getResponseCode();
 
-                    if (responseCode == 200) {
-                        BufferedInputStream in = new BufferedInputStream(connection.getInputStream());
-                        int downloaded = 0, total = in.available();
-                        byte[] imageBytes = new byte[total];
-                        downloaded = in.read(imageBytes, 0, in.available());
-                        in.close();
-
-                        if (downloaded == total) {
-                            File outputFile = getImageFile(messageID, imageStore, appContext);
-                            FileOutputStream fos = new FileOutputStream(outputFile);
-                            fos.write(imageBytes);
-                            fos.flush();
-                            fos.close();
-                        }
-
-                        return BitmapFactory.decodeByteArray(imageBytes, 0, total);
+                    if (response != HttpsURLConnection.HTTP_OK) {
+                        return null;
                     }
 
+                    InputStream is = connection.getInputStream();
+                    if (is != null) {
+                        Bitmap downloadedImage = BitmapFactory.decodeStream(is);
+
+                        File outputFile = getImageFile(messageID, imageStore, appContext);
+                        FileOutputStream fos = new FileOutputStream(outputFile);
+                        downloadedImage.compress(Bitmap.CompressFormat.JPEG, 100, fos);
+                        fos.close();
+
+                        return downloadedImage;
+                    }
                 } catch (IOException e) {
                     Log.d(TAG, "Failed to download image");
                     e.printStackTrace();
                 }
             }
 
+            Log.d(TAG, "Failed returning NULL from downloadImageFromServer");
             return null;
         }
 
@@ -273,8 +286,11 @@ public class MediaLoader {
             if (file != null) {
                 file = fixImageOrientation(imageFile.getAbsolutePath(), file, true);
             } else {
+                Log.d(TAG, "Downloading from server");
                 String apiRoute = appContext.getString(R.string.online_image_message_route);
                 file = downloadImageFromServer(apiRoute, IMAGE_STORE_UPLOADS);
+                if (file != null)
+                    file = fixImageOrientation(imageFile.getAbsolutePath(), file, true);
             }
 
             return file != null ? file : BitmapFactory.decodeResource(context.getResources(), R.drawable.sample_image);
@@ -293,6 +309,7 @@ public class MediaLoader {
     private static class UploadImageToServer extends AsyncTask<String, Void, Boolean> {
 
         private Context context;
+        String messageToSend;
 
         UploadImageToServer(Context context) {
             this.context = context;
@@ -313,6 +330,8 @@ public class MediaLoader {
         protected Boolean doInBackground(String... params) {
             String messageID = params[0];
             String apiRoute  = params[1];
+            messageToSend    = params[2];
+
             Log.d(TAG, "Starting image upload " + messageID + ": " + apiRoute);
 
             if (messageID != null && apiRoute != null) {
@@ -358,6 +377,13 @@ public class MediaLoader {
                 Intent updateUI = new Intent();
                 updateUI.setAction(MessageListFragment.ACTION_IMAGE_ADDED);
                 appContext.sendBroadcast(updateUI);
+
+                if (messageToSend != null) {
+                    Intent sendImageMessage = new Intent();
+                    sendImageMessage.setAction(QTCPSocketService.ACTION_SEND_MESSAGE);
+                    sendImageMessage.putExtra(QTCPSocketService.INTENT_KEY_MESSAGE, messageToSend);
+                    appContext.sendBroadcast(sendImageMessage);
+                }
             }
         }
     }

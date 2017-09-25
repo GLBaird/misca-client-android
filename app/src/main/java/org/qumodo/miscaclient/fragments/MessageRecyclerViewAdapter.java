@@ -115,9 +115,11 @@ public class MessageRecyclerViewAdapter extends RecyclerView.Adapter<MessageRecy
         loading = true;
         holder.imageView.setVisibility(View.INVISIBLE);
         holder.spinner.setVisibility(View.VISIBLE);
+        Log.d("MessageRecycleView", "Loading Message");
         MediaLoader.getMessageImage(holder.mItem.getId(), holder.mView.getContext(), new MediaLoaderListener() {
             @Override
             public void imageHasLoaded(String ref, Bitmap image) {
+                Log.d("MessageRecycleView", "Image has loaded");
                 holder.imageView.setImageBitmap(image);
                 holder.imageView.setVisibility(View.VISIBLE);
                 holder.spinner.setVisibility(View.GONE);

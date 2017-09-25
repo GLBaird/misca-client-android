@@ -139,7 +139,8 @@ public class MessageCenter {
 
     private void parsePictureMessage(QMessage message) {
         try {
-            String caption = message.data.getString(QMessage.KEY_CAPTION);
+//            String caption = message.data.getString(QMessage.KEY_CAPTION);
+            String caption = ""; // For now, ignoring caption as may remove from system
             String groupID = message.data.getString(QMessage.KEY_GROUP_ID);
 
             DataManager dm = new DataManager(appContext);
@@ -147,7 +148,7 @@ public class MessageCenter {
             MessageContentProvider.addItem(newMessage);
 
             Intent updateUI = new Intent();
-            updateUI.setAction(RELOAD_UI);
+            updateUI.setAction(NEW_LIST_ITEM);
             updateUI.putExtra(QMessage.KEY_GROUP_ID, groupID);
             appContext.sendBroadcast(updateUI);
         } catch (JSONException e) {

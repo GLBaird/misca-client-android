@@ -259,7 +259,25 @@ public class MainActivity extends Activity implements QMiscaGroupsListFragment.O
             MessageListFragment messageListFragment = (MessageListFragment) fragment;
             messageListFragment.loadNewMessage(newPictureMessage);
         }
-        MediaLoader.uploadImageToServer(newImageID);
+
+        JSONObject data = new JSONObject();
+        try {
+            data.put(QMessage.KEY_GROUP_ID, groupID);
+            data.put(QMessage.KEY_CAPTION, ""); // Ignoring caption for now, as may remove!
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        QMessage imageMessage = new QMessage(
+                newPictureMessage.getId(),
+                new String[] {groupID},
+                UserSettingsManager.getUserID(),
+                QMessageType.PICTURE,
+                data,
+                newPictureMessage.getTS()
+        );
+
+        MediaLoader.uploadImageToServer(newImageID, imageMessage);
 
         messageTextForCaption = null;
         newImageID = null;
