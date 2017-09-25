@@ -1,17 +1,22 @@
 package org.qumodo.miscaclient.fragments;
 
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import org.qumodo.data.MediaLoader;
 import org.qumodo.data.MediaLoaderListener;
+import org.qumodo.data.MessageCenter;
 import org.qumodo.miscaclient.R;
 import org.qumodo.miscaclient.dataProviders.UserSettingsManager;
 import org.qumodo.data.models.Message;
@@ -108,12 +113,23 @@ public class MessageRecyclerViewAdapter extends RecyclerView.Adapter<MessageRecy
 
     private void bindPictureMessage(final ViewHolder holder) {
         loading = true;
+        holder.imageView.setVisibility(View.INVISIBLE);
+        holder.spinner.setVisibility(View.VISIBLE);
         MediaLoader.getMessageImage(holder.mItem.getId(), holder.mView.getContext(), new MediaLoaderListener() {
             @Override
             public void imageHasLoaded(String ref, Bitmap image) {
                 holder.imageView.setImageBitmap(image);
                 holder.imageView.setVisibility(View.VISIBLE);
+                holder.spinner.setVisibility(View.GONE);
                 loading = false;
+                holder.imageView.getLayoutParams().height = RecyclerView.LayoutParams.WRAP_CONTENT;
+                int index = mValues.indexOf(holder.mItem);
+                if (index >= mValues.size() - 2) {
+                    Intent updateUI = new Intent();
+                    updateUI.setAction(MessageListFragment.ACTION_LAST_IMAGE_LOADED);
+                    updateUI.putExtra(MessageListFragment.INTENT_LIST_ITEM_LOADED, index);
+                    holder.imageView.getContext().sendBroadcast(updateUI);
+                }
             }
 
             @Override
@@ -125,6 +141,8 @@ public class MessageRecyclerViewAdapter extends RecyclerView.Adapter<MessageRecy
         });
     }
 
+    private int lastPosition = -1;
+
     @Override
     public void onBindViewHolder(final ViewHolder holder, int position) {
         holder.mItem = mValues.get(position);
@@ -134,14 +152,20 @@ public class MessageRecyclerViewAdapter extends RecyclerView.Adapter<MessageRecy
         } else if (holder.mItem.getType() == QMessageType.PICTURE) {
             bindPictureMessage(holder);
         }
+
+        Animation animation = AnimationUtils.loadAnimation(
+                holder.mView.getContext(),
+                (position > lastPosition)
+                        ? R.anim.up_from_bottom
+                        : R.anim.down_from_top);
+        holder.itemView.startAnimation(animation);
+        lastPosition = position;
     }
 
     @Override
     public void onViewDetachedFromWindow(ViewHolder holder) {
         super.onViewDetachedFromWindow(holder);
-        if (holder.imageView != null) {
-            holder.imageView.setVisibility(View.INVISIBLE);
-        }
+        holder.itemView.clearAnimation();
     }
 
     @Override
@@ -162,6 +186,7 @@ public class MessageRecyclerViewAdapter extends RecyclerView.Adapter<MessageRecy
         public final TextView messageText;
         public final TextView messageTime;
         public final ImageView imageView;
+        public final ProgressBar spinner;
         public Message mItem;
 
         public ViewHolder(View view) {
@@ -169,6 +194,7 @@ public class MessageRecyclerViewAdapter extends RecyclerView.Adapter<MessageRecy
             mView = view;
             messageText = (TextView) view.findViewById(R.id.message_list_item_text);
             messageTime = (TextView) view.findViewById(R.id.message_list_item_time);
+            spinner = (ProgressBar) view.findViewById(R.id.spinner);
             imageView = (ImageView) view.findViewById(R.id.image_view);
             if (imageView != null) {
                 imageView.setClipToOutline(true);

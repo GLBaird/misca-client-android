@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="online_socket_hostname">192.168.0.104</string>
+    <string name="online_socket_hostname">192.168.0.19</string>
     <integer name="online_socket_port">9500</integer>
-    <string name="online_image_hostname">http://192.168.0.104</string>
-    <integer name="online_image_store_port">17000</integer>
-    <string name="online_image_message_route">/v1/media/message_image/</string>
-    <string name="online_image_user_avatar_route">/v1/media/user_avatar/</string>
+    <string name="online_image_hostname">http://192.168.0.19</string>
+    <integer name="online_image_store_port">9800</integer>
+    <string name="online_image_message_route">/message_image/</string>
+    <string name="online_image_user_avatar_route">/user_avatar/</string>
 
 </resources>

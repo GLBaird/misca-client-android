@@ -1,17 +1,15 @@
 package org.qumodo.miscaclient.fragments;
 
 import android.app.ActionBar;
+import android.app.Fragment;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.graphics.Bitmap;
 import android.os.Bundle;
-import android.app.Fragment;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,42 +17,50 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.qumodo.data.DataManager;
 import org.qumodo.data.MessageCenter;
 import org.qumodo.data.models.Group;
 import org.qumodo.data.models.Message;
 import org.qumodo.miscaclient.R;
 import org.qumodo.miscaclient.dataProviders.MessageContentProvider;
-import org.qumodo.miscaclient.dataProviders.UserSettingsManager;
 import org.qumodo.network.QMessage;
 import org.qumodo.network.QMessageType;
 
 import java.util.Date;
-import java.util.List;
-import java.util.UUID;
 
 
 public class MessageListFragment extends Fragment implements View.OnClickListener, View.OnLongClickListener {
 
     public static final String TAG = "MessageListFragment";
-
+    public static final String ACTION_LAST_IMAGE_LOADED = "org.qumodo.misca.MessageListFragment.ActionLastImageLoaded";
+    public static final String ACTION_IMAGE_ADDED = "org.qumodo.misca.MessageListFragment.ActionImageAdded";
+    public static final String INTENT_LIST_ITEM_LOADED = "ActionLastImageLoaded.ListItemLoaded";
     private static final String ARG_COLUMN_COUNT = "column-count";
+
+    private int imageLoadCount = 0;
     private int mColumnCount = 1;
     private OnMessageListInteractionListener mListener;
     private Group group;
-    private List<Message> messages;
     private EditText textEntry;
-    private Button cameraButton;
-    private Button sendButton;
-    MessageRecyclerViewAdapter adapter;
+    private MessageRecyclerViewAdapter adapter;
     private BroadcastReceiver receiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (intent.getAction().equals(MessageCenter.RELOAD_UI)) {
-                adapter.notifyDataSetChanged();
-                recyclerView.scrollToPosition(MessageContentProvider.ITEMS.size() - 1);
+            switch (intent.getAction()) {
+                case ACTION_LAST_IMAGE_LOADED:
+                    int itemLoaded = intent.getIntExtra(INTENT_LIST_ITEM_LOADED, 0);
+                    int listItems = MessageContentProvider.ITEMS.size();
+                    if ((itemLoaded == listItems - 2 && imageLoadCount <= 1)
+                            || (itemLoaded == listItems -1 && imageLoadCount == 0)) {
+                        imageLoadCount++;
+                        recyclerView.scrollToPosition(MessageContentProvider.ITEMS.size() - 1);
+                    }
+                    break;
+                case MessageCenter.RELOAD_UI:
+                    adapter.notifyDataSetChanged();
+                case ACTION_IMAGE_ADDED:
+                    recyclerView.scrollToPosition(MessageContentProvider.ITEMS.size() - 1);
+                    break;
             }
         }
     };
@@ -65,7 +71,6 @@ public class MessageListFragment extends Fragment implements View.OnClickListene
     public void setGroup(String groupID, Context context) {
         DataManager dm = new DataManager(context);
         group = dm.getGroup(groupID);
-        messages = MessageContentProvider.ITEMS;
     }
 
     @SuppressWarnings("unused")
@@ -83,6 +88,8 @@ public class MessageListFragment extends Fragment implements View.OnClickListene
 
         IntentFilter receiverIntent = new IntentFilter();
         receiverIntent.addAction(MessageCenter.RELOAD_UI);
+        receiverIntent.addAction(ACTION_LAST_IMAGE_LOADED);
+        receiverIntent.addAction(ACTION_IMAGE_ADDED);
         getContext().registerReceiver(receiver, receiverIntent);
 
         if (getArguments() != null) {
@@ -104,8 +111,8 @@ public class MessageListFragment extends Fragment implements View.OnClickListene
         View rView = view.findViewById(R.id.list);
 
         textEntry = (EditText) view.findViewById(R.id.text_entry);
-        cameraButton = (Button) view.findViewById(R.id.camera);
-        sendButton = (Button) view.findViewById(R.id.send_button);
+        Button cameraButton = (Button) view.findViewById(R.id.camera);
+        Button sendButton = (Button) view.findViewById(R.id.send_button);
 
         cameraButton.setOnClickListener(this);
         sendButton.setOnClickListener(this);

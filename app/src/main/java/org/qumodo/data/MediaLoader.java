@@ -1,9 +1,9 @@
 package org.qumodo.data;
 
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.ContextWrapper;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -14,30 +14,22 @@ import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
 import android.media.ExifInterface;
 import android.os.AsyncTask;
-import android.util.Base64;
 import android.util.Log;
 import android.widget.Toast;
 
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.qumodo.miscaclient.R;
 import org.qumodo.miscaclient.dataProviders.UserSettingsManager;
+import org.qumodo.miscaclient.fragments.MessageListFragment;
 
+import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Scanner;
-import java.util.TimeZone;
 import java.util.UUID;
 
 
@@ -65,7 +57,7 @@ public class MediaLoader {
         final Paint paint = new Paint();
         final Rect rect = new Rect(0, 0, bitmap.getWidth(), bitmap.getHeight());
 
-        float r = 0;
+        float r;
 
         if (bitmap.getWidth() > bitmap.getHeight()) {
             r = bitmap.getHeight() / 2;
@@ -93,21 +85,21 @@ public class MediaLoader {
         listener.imageHasLoaded(userID, file);
     }
 
-    public static Bitmap rotateBitmap(Bitmap source, float angle)
+    public static Bitmap rotateBitmap(Bitmap source, float angle, boolean scaleImage)
     {
         Matrix matrix = new Matrix();
 
-        if (source.getWidth() > 1000) {
+        if (source.getWidth() > 1000 && scaleImage) {
             float scale = (float) 1000 / (float) source.getWidth();
             matrix.postScale(scale, scale);
-            Log.d("@@@@@", "Scale "+scale+"  "+source.getWidth()+"  "+source.getHeight());
+            Log.d(TAG, "Scale "+scale+"  "+source.getWidth()+"  "+source.getHeight());
         }
         matrix.postRotate(angle);
 
         return Bitmap.createBitmap(source, 0, 0, source.getWidth(), source.getHeight(), matrix, true);
     }
 
-    public static Bitmap fixImageOrientation(String filepath, Bitmap image) {
+    public static Bitmap fixImageOrientation(String filepath, Bitmap image, boolean scaleImage) {
         try {
             ExifInterface exif = new ExifInterface(filepath);
             int orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, 1);
@@ -125,7 +117,7 @@ public class MediaLoader {
             }
 
             if (rotate > 0)
-                return rotateBitmap(image, rotate);
+                return rotateBitmap(image, rotate, scaleImage);
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -133,7 +125,7 @@ public class MediaLoader {
 
         Matrix matrix = new Matrix();
 
-        if (image.getWidth() > 1000) {
+        if (image.getWidth() > 1000 && scaleImage) {
             float scale = (float) 1000 / (float) image.getWidth();
             matrix.postScale(scale, scale);
             return Bitmap.createBitmap(image, 0, 0, image.getWidth(), image.getHeight(), matrix, true);
@@ -232,7 +224,7 @@ public class MediaLoader {
             Bitmap file = BitmapFactory.decodeFile(imageFile.getAbsolutePath());
 
             if (file != null) {
-                file = fixImageOrientation(imageFile.getAbsolutePath(), file);
+                file = fixImageOrientation(imageFile.getAbsolutePath(), file, true);
             }
 
             return file;
@@ -256,54 +248,24 @@ public class MediaLoader {
             this.context = context;
         }
 
-        private String getISODateString() {
-            TimeZone tz = TimeZone.getTimeZone("UTC");
-            @SuppressLint("SimpleDateFormat") DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'");
-            df.setTimeZone(tz);
-            return df.format(new Date());
-        }
-
-        private String loadImageData(String messageID) {
+        private byte[] loadImageDataAsByteArray(String messageID) {
+            Log.d(TAG, "Loading Image Data");
             File imageFile = getImageFile(messageID, IMAGE_STORE_UPLOADS, context);
+            Log.d(TAG, "PATH - " + imageFile.getAbsolutePath());
             Bitmap image = BitmapFactory.decodeFile(imageFile.getAbsolutePath());
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            image.compress(Bitmap.CompressFormat.JPEG, 100, baos);
-            byte[] byteArrayImage = baos.toByteArray();
-            return Base64.encodeToString(byteArrayImage, Base64.DEFAULT);
-        }
-
-        private String packImageDataIntoUMF(String messageID, String serviceAPI) {
-            try {
-                JSONObject message = new JSONObject();
-                message.put("mid", UUID.randomUUID().toString());
-                message.put("to", "[post]"+serviceAPI+"/"+messageID);
-                message.put("from", "uid:"+UserSettingsManager.getUserID());
-                message.put("version", "UMF/1.3");
-                message.put("timestamp", getISODateString());
-
-                JSONObject body = new JSONObject();
-                body.put("type", "private:message");
-                body.put("contentType", "text/plain");
-                body.put("base64", "TEST");
-
-                message.put("body", body);
-
-                return message.toString();
-            } catch (JSONException e) {
-                Log.e(TAG, "Error forming JSON data for UMF");
-                e.printStackTrace();
-            }
-
-            return null;
+            image = fixImageOrientation(imageFile.getAbsolutePath(), image, false);
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            image.compress(Bitmap.CompressFormat.JPEG, 100, bos);
+            return bos.toByteArray();
         }
 
         @Override
         protected Boolean doInBackground(String... params) {
-            Log.d(TAG, "Starting image upload");
             String messageID = params[0];
             String apiRoute  = params[1];
-            String umf = packImageDataIntoUMF(messageID, apiRoute);
-            if (umf != null && messageID != null && apiRoute != null) {
+            Log.d(TAG, "Starting image upload " + messageID + ": " + apiRoute);
+
+            if (messageID != null && apiRoute != null) {
                 try {
                     URL imageStoreURL = new URL(
                         appContext.getString(R.string.online_image_hostname)
@@ -315,20 +277,19 @@ public class MediaLoader {
                     connection.setRequestProperty("User-Agent", "");
                     connection.setRequestProperty("userID", UserSettingsManager.getUserID());
                     connection.setRequestProperty("User-Certificate", UserSettingsManager.getHashedClientPublicKeyString());
-                    connection.setRequestMethod("POST");
-                    connection.setDoInput(true);
+                    connection.setRequestProperty("Content-Type", "image/jpeg");
                     connection.setDoOutput(true);
+                    connection.setRequestMethod("POST");
+                    connection.setUseCaches(false);
                     connection.connect();
 
-                    OutputStream output = connection.getOutputStream();
-                    output.write(umf.getBytes());
-                    output.close();
+                    BufferedOutputStream out = new BufferedOutputStream(connection.getOutputStream());
+                    out.write(loadImageDataAsByteArray(messageID));
+                    out.flush();
+                    out.close();
 
-                    Scanner result = new Scanner(connection.getInputStream());
-                    String response = result.nextLine();
-                    result.close();
-
-                    Log.d("Media Loader", response);
+                    int responseCode = connection.getResponseCode();
+                    return responseCode == 200;
 
                 } catch (IOException e) {
                     Log.d(TAG, "Failed to upload image");
@@ -336,6 +297,7 @@ public class MediaLoader {
                     return false;
                 }
             }
+
             return true;
         }
 
@@ -344,6 +306,12 @@ public class MediaLoader {
             if (!success) {
                 Toast.makeText(appContext, "Failed to upload image to server", Toast.LENGTH_SHORT)
                         .show();
+            } else {
+                Toast.makeText(appContext, "Image uploaded", Toast.LENGTH_SHORT)
+                     .show();
+                Intent updateUI = new Intent();
+                updateUI.setAction(MessageListFragment.ACTION_IMAGE_ADDED);
+                appContext.sendBroadcast(updateUI);
             }
         }
     }

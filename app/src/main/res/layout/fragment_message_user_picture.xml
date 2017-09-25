@@ -22,14 +22,23 @@
         android:text="14:55"
         tools:ignore="HardcodedText" />
 
-    <ImageView
-        android:id="@+id/image_view"
+    <FrameLayout
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
         android:layout_weight="3"
-        android:adjustViewBounds="true"
-        android:background="@drawable/rounded_picture_box"
-        android:scaleType="fitCenter" />
+        android:layout_height="wrap_content">
+        <ImageView
+            android:id="@+id/image_view"
+            android:layout_width="match_parent"
+            android:layout_height="300dp"
+            android:background="@drawable/rounded_picture_box"
+            android:adjustViewBounds="true"
+            android:scaleType="fitCenter" />
+        <ProgressBar
+            android:id="@+id/spinner"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_gravity="center"/>
+    </FrameLayout>
 
 </LinearLayout>
 
