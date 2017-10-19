@@ -182,9 +182,6 @@ public class MessageListFragment extends Fragment implements View.OnClickListene
                     dm.addNewMessage(message, QMessageType.TEXT, group.getId(), messageSent.id, messageSent.from, new Date(messageSent.ts))
             );
             adapter.notifyItemInserted(MessageContentProvider.ITEMS.size() - 1);
-            Intent updateUI = new Intent();
-            updateUI.setAction(MessageCenter.NEW_LIST_ITEM);
-            getContext().sendBroadcast(updateUI);
         } else {
             Toast.makeText(getContext(), "Failed to send message", Toast.LENGTH_SHORT)
                  .show();

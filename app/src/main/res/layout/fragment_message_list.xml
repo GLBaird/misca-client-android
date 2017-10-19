@@ -37,6 +37,7 @@
         android:layout_toStartOf="@+id/send_button"
         android:background="@drawable/rounded_text_box"
         android:textColor="@color/colorChatTextBlack"
+        android:inputType="textAutoComplete|textCapSentences"
         android:layout_marginBottom="@dimen/list_margin"
         android:layout_marginStart="@dimen/list_margin"
         android:layout_marginEnd="@dimen/list_margin"
