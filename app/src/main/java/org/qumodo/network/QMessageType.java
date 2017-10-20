@@ -16,6 +16,8 @@ public enum QMessageType {
     ADD_DEVICE(12),
     STATUS(13),
     AUTHENTICATION(14),
+    MISCA_TEXT(15),
+    MISCA_PHOTO(16),
     UNKNOWN(100);
 
     public int value;
@@ -52,6 +54,10 @@ public enum QMessageType {
                 return "status";
             case 14:
                 return "authentication";
+            case 15:
+                return "misca text";
+            case 16:
+                return "misca photo";
             default:
                 return "unknown";
         }
