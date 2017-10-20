@@ -9,6 +9,7 @@ import android.widget.Toast;
 
 import org.json.JSONException;
 import org.qumodo.data.models.Message;
+import org.qumodo.miscaclient.dataProviders.LocationImageProvider;
 import org.qumodo.miscaclient.dataProviders.MessageContentProvider;
 import org.qumodo.miscaclient.dataProviders.UserSettingsManager;
 import org.qumodo.network.QMessage;
@@ -161,7 +162,19 @@ public class MessageCenter {
     }
 
     private void parseSystemCommand(QMessage message) {
-
+        try {
+            String command = message.data.getString("command");
+            switch (command) {
+                case "image_data":
+                    LocationImageProvider.parseImageData(message.data.getJSONArray("images"));
+                    break;
+                default:
+                    Log.e(TAG, "Unknown command " + command);
+            }
+        } catch (JSONException e) {
+            Log.e(TAG, "Failed to parse QMessage with Command " + message.toString());
+            e.printStackTrace();
+        }
     }
 
     private void reportError(String message) {
