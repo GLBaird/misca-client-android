@@ -3,6 +3,7 @@ package org.qumodo.miscaclient.dataProviders;
 import android.content.Context;
 import android.content.Intent;
 import android.location.Location;
+import android.util.Log;
 
 import com.google.android.gms.maps.model.LatLng;
 
@@ -24,7 +25,7 @@ import java.util.Map;
 public class LocationImageProvider {
 
     public interface LocationImageProviderListener {
-        public void locationImageProviderHasUpdatedWithData();
+        void locationImageProviderHasUpdatedWithData();
     }
 
     public static List<MiscaImage> ITEMS = new ArrayList<>();
@@ -63,27 +64,20 @@ public class LocationImageProvider {
     }
 
     public static void parseImageData(JSONArray imageData) {
+        Log.d("LocationIMageProcider", "Starting Parse");
         ITEMS_MAP.clear();
         ITEMS.clear();
         for (int i = 0; i < imageData.length(); i++) {
             try {
                 JSONObject image = (JSONObject) imageData.get(i);
 
-                JSONObject exif = image.getJSONObject("exif");
-                HashMap<String, String> parsedExif = new HashMap<>(exif.names().length());
-                Iterator<String> keys = exif.keys();
-                while (keys.hasNext()) {
-                    String key = keys.next();
-                    parsedExif.put(key, exif.getString(key));
-                }
-
                 MiscaImage parsed = new MiscaImage(
                         image.getString("id"),
                         image.getString("path"),
-                        image.getString("classifier"),
+                        image.getString("classifiers"),
                         image.getString("captions"),
                         new LatLng(image.getDouble("lat"), image.getDouble("lon")),
-                        parsedExif
+                        null
                 );
 
                 addImage(parsed);
@@ -91,6 +85,7 @@ public class LocationImageProvider {
                 e.printStackTrace();
             }
         }
+        Log.d("LOCPROV", "Got data " + ITEMS.size());
         if (listener != null) {
             listener.locationImageProviderHasUpdatedWithData();
         }

@@ -478,7 +478,6 @@ public class MainActivity extends Activity implements QMiscaGroupsListFragment.O
                     .beginTransaction()
                     .remove(current)
                     .commit();
-            current.setRetainInstance(false);
         }
     }
 
@@ -530,9 +529,10 @@ public class MainActivity extends Activity implements QMiscaGroupsListFragment.O
 
     private void getUserLocation() {
         Log.d(TAG, "Starting location");
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-                == PackageManager.PERMISSION_GRANTED) {
-            Log.d(TAG, "Got permission for updates");
+        if (userLocation == null
+                && ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                    == PackageManager.PERMISSION_GRANTED
+        ) {
             userLocation =  LocationServices.FusedLocationApi.getLastLocation(googleApiClient);
             if (mMapView != null) {
                 mMapView.updateMapView(userLocation, googleApiClient);
@@ -544,6 +544,8 @@ public class MainActivity extends Activity implements QMiscaGroupsListFragment.O
 
             LocationServices.FusedLocationApi.requestLocationUpdates(
                     googleApiClient, locationRequest, this);
+        } else if (userLocation != null && mMapView != null) {
+            mMapView.updateMapView(userLocation, googleApiClient);
         }
     }
 
@@ -568,7 +570,6 @@ public class MainActivity extends Activity implements QMiscaGroupsListFragment.O
 
     @Override
     public void onLocationChanged(Location location) {
-        Log.d(TAG, "Got Location from this crazy shit");
         userLocation = location;
         LocationServices.FusedLocationApi.removeLocationUpdates(googleApiClient, this);
         if (mMapView != null) {

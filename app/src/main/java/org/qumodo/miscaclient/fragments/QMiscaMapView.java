@@ -1,6 +1,7 @@
 package org.qumodo.miscaclient.fragments;
 
 
+import android.graphics.BitmapFactory;
 import android.location.Location;
 import android.os.Bundle;
 import android.app.Fragment;
@@ -15,11 +16,14 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.model.BitmapDescriptor;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import org.qumodo.miscaclient.R;
+import org.qumodo.miscaclient.dataProviders.LocationImageProvider;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -36,7 +40,7 @@ public class QMiscaMapView extends Fragment implements OnMapReadyCallback {
     }
 
     public void updateMapView(Location userLocation, GoogleApiClient googleApiClient) {
-        Log.d("MAP", "Update map view");
+        Log.d("MAP", "Update map view " + userLocation);
         this.userLocation = userLocation;
         this.googleApiClient = googleApiClient;
         if (googleMap != null) {
@@ -45,24 +49,36 @@ public class QMiscaMapView extends Fragment implements OnMapReadyCallback {
     }
 
     private LatLng getLocationPosition() {
-        return new LatLng(userLocation.getLatitude(), userLocation.getLongitude());
+        if (userLocation != null) {
+            return new LatLng(userLocation.getLatitude(), userLocation.getLongitude());
+        }
+
+        return null;
     }
 
-    private MarkerOptions getUserPositionMarkerOptions() {
+    private MarkerOptions getUserPositionMarkerOptions(LatLng position) {
         return new MarkerOptions()
-                .position(getLocationPosition())
+                .position(position)
+                .icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_my_location))
+                .anchor(0.5f, 0.5f)
                 .title("User position");
     }
 
     Marker currentUserPosition;
 
     private void updatePositionOnMap() {
-        if (currentUserPosition == null) {
-            googleMap.addMarker(getUserPositionMarkerOptions());
-        } else {
-            currentUserPosition.setPosition(getLocationPosition());
+        LatLng location = getLocationPosition();
+        if (currentUserPosition == null && location != null) {
+            MarkerOptions markerOptions = getUserPositionMarkerOptions(location);
+            currentUserPosition = googleMap.addMarker(markerOptions);
+        } else if (currentUserPosition != null && location != null) {
+            currentUserPosition.setPosition(location);
         }
-        googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(getLocationPosition(), 15));
+        if (googleMap!= null && location != null) {
+            googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(getLocationPosition(), 15));
+        }
+
+        LocationImageProvider.getLocationImages(userLocation, getContext());
     }
 
 
@@ -71,19 +87,25 @@ public class QMiscaMapView extends Fragment implements OnMapReadyCallback {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_qmisca_map_view, container, false);
-        mapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.map_container);
+        mapFragment = (MapFragment) getFragmentManager().findFragmentByTag("MAP_FRAGMENT");
 
         if (mapFragment == null) {
+            Log.d("MAP", "creating new map fragment");
             mapFragment = MapFragment.newInstance();
             getFragmentManager()
                     .beginTransaction()
                     .add(R.id.map_container, mapFragment, "MAP_FRAGMENT")
                     .commit();
         } else {
+            Log.d("MAP", "Attaching existing fragment");
+            MapFragment newFrag = MapFragment.newInstance();
             getFragmentManager()
                     .beginTransaction()
-                    .attach(mapFragment)
+                    .remove(mapFragment)
+                    .add(R.id.map_container, newFrag, "MAP_FRAGMENT")
                     .commit();
+            updatePositionOnMap();
+            mapFragment = newFrag;
         }
         mapFragment.getMapAsync(this);
 
