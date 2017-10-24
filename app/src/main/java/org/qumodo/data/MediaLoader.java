@@ -25,7 +25,6 @@ import org.qumodo.miscaclient.fragments.MessageListFragment;
 import org.qumodo.network.QMessage;
 import org.qumodo.services.QTCPSocketService;
 
-import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -36,7 +35,6 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Arrays;
 import java.util.UUID;
 
 import javax.net.ssl.HttpsURLConnection;
@@ -426,6 +424,34 @@ public class MediaLoader {
                 }
             }
         }
+    }
+
+    public static String getURLString(int apiRef, String fileRef, String thumbnailSize) {
+        String api = appContext.getResources().getString(apiRef);
+        return appContext.getString(R.string.online_image_hostname)
+                + ":" + appContext.getResources().getInteger(R.integer.online_image_store_port)
+                + api + (thumbnailSize != null ? "thumb/" : "")
+                + fileRef + (thumbnailSize != null ? "?size=" + thumbnailSize : "");
+    }
+
+    public static String getURLStringForMessageImage(String messageID) {
+        return getURLStringForMessageImage(messageID, null);
+    }
+
+    public static String getURLStringForMessageImage(String messageID, String thumbSize) {
+        return getURLString(R.string.online_image_message_route, messageID, thumbSize);
+    }
+
+    public static String getURLStringForCoreImage(String imagePath) {
+        return getURLStringForCoreImage(imagePath, null);
+    }
+
+    public static String getURLStringForCoreImage(String imagePath, String thumbSize) {
+        return getURLString(R.string.online_core_image_route, imagePath, thumbSize);
+    }
+
+    public static String getURLStringForAvatar(String userID) {
+        return getURLString(R.string.online_image_user_avatar_route, userID, null);
     }
 
     @NonNull

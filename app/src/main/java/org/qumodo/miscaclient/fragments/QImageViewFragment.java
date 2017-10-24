@@ -3,8 +3,11 @@ package org.qumodo.miscaclient.fragments;
 
 import android.app.ActionBar;
 import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.app.Fragment;
+import android.support.annotation.Nullable;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,6 +15,12 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.DataSource;
+import com.bumptech.glide.load.engine.GlideException;
+import com.bumptech.glide.request.RequestListener;
+import com.bumptech.glide.request.target.Target;
 
 import org.qumodo.data.MediaLoader;
 import org.qumodo.data.MediaLoaderListener;
@@ -22,14 +31,14 @@ import org.qumodo.miscaclient.R;
  * Use the {@link QImageViewFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class QImageViewFragment extends Fragment implements MediaLoaderListener {
+public class QImageViewFragment extends Fragment {
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_IMAGE_PATH = "image_path";
     private static final String ARG_IMAGE_ID = "image_id";
     private static final String ARG_SERVICE = "service";
 
-    public static final int IMAGE_SERVICE_CORE_IMAGE = 0;
-    public static final int IMAGE_SERVICE_USER_IMAGE = 1;
+    public static final int IMAGE_SERVICE_CORE_IMAGE = R.string.online_core_image_route;
+    public static final int IMAGE_SERVICE_USER_IMAGE = R.string.online_image_message_route;
 
     public static final String INTENT_IMAGE_PATH = "IntentImagePath";
     public static final String INTENT_IMAGE_ID = "IntentImageID";
@@ -38,26 +47,16 @@ public class QImageViewFragment extends Fragment implements MediaLoaderListener 
     public static final String TAG = "QImageViewFragment";
 
     private String imagePath;
-    private String imageID;
     private int service;
 
     public QImageViewFragment() {
         // Required empty public constructor
     }
 
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param imagePath Path of image to display
-     * @return A new instance of fragment QImageViewFragment.
-     */
-    // TODO: Rename and change types and number of parameters
     public static QImageViewFragment newInstance(String imagePath, int service, String imageID) {
         QImageViewFragment fragment = new QImageViewFragment();
         Bundle args = new Bundle();
         args.putString(ARG_IMAGE_PATH, imagePath);
-        args.putString(ARG_IMAGE_ID, imageID);
         args.putInt(ARG_SERVICE, service);
 
         fragment.setArguments(args);
@@ -72,7 +71,6 @@ public class QImageViewFragment extends Fragment implements MediaLoaderListener 
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
             imagePath = getArguments().getString(ARG_IMAGE_PATH);
-            imageID = getArguments().getString(ARG_IMAGE_ID);
             service = getArguments().getInt(ARG_SERVICE);
         }
 
@@ -92,23 +90,25 @@ public class QImageViewFragment extends Fragment implements MediaLoaderListener 
         imageView = v.findViewById(R.id.image_view);
         spinner = v.findViewById(R.id.spinner);
 
-        if (service == IMAGE_SERVICE_CORE_IMAGE)
-            MediaLoader.getCoreImage(imageID, imagePath, null, getContext(), this);
-        else
-            MediaLoader.getMessageImage(imageID, getContext(), this);
+        Log.d(TAG, MediaLoader.getURLString(service, imagePath.substring(1), null));
+        Glide.with(getContext())
+                .load(MediaLoader.getURLString(service, imagePath.substring(1), null))
+                .listener(new RequestListener<Drawable>() {
+                    @Override
+                    public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
+                        Toast.makeText(getContext(), "Image has failed to load!", Toast.LENGTH_SHORT)
+                                .show();
+                        return false;
+                    }
+
+                    @Override
+                    public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) {
+                        spinner.setVisibility(View.GONE);
+                        return false;
+                    }
+                })
+                .into(imageView);
 
         return v;
-    }
-
-    @Override
-    public void imageHasLoaded(String ref, Bitmap image) {
-        spinner.setVisibility(View.GONE);
-        imageView.setImageBitmap(image);
-    }
-
-    @Override
-    public void imageHasFailedToLoad(String ref) {
-        Toast.makeText(getContext(), "Image has failed to load!", Toast.LENGTH_SHORT)
-             .show();
     }
 }

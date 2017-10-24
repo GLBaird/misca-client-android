@@ -1,6 +1,8 @@
 package org.qumodo.miscaclient.fragments;
 
 import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
+import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -9,6 +11,12 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.DataSource;
+import com.bumptech.glide.load.engine.GlideException;
+import com.bumptech.glide.request.RequestListener;
+import com.bumptech.glide.request.target.Target;
 
 import org.qumodo.data.MediaLoader;
 import org.qumodo.data.MediaLoaderListener;
@@ -43,21 +51,22 @@ public class QImageRecyclerViewAdapter extends RecyclerView.Adapter<QImageRecycl
         holder.mImageView.setImageBitmap(null);
         holder.mSpinner.setVisibility(View.VISIBLE);
 
-        MediaLoader.getCoreImage(holder.mItem.getId(), holder.mItem.getPath(), "100", holder.mView.getContext(), new MediaLoaderListener() {
-            @Override
-            public void imageHasLoaded(String ref, Bitmap image) {
-                Log.d("RECY", "REF "+ref+" ::"+holder.mItem.getId());
-                if (holder.mItem.getId().equals(ref)) {
-                    holder.mImageView.setImageBitmap(image);
-                    holder.mSpinner.setVisibility(View.GONE);
-                }
-            }
+        Glide.with(holder.mView.getContext())
+                .load(MediaLoader.getURLStringForCoreImage(holder.mItem.getPath().substring(1)))
+                .listener(new RequestListener<Drawable>() {
+                    @Override
+                    public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
+                        holder.mSpinner.setVisibility(View.GONE);
+                        return false;
+                    }
 
-            @Override
-            public void imageHasFailedToLoad(String ref) {
-                holder.mSpinner.setVisibility(View.GONE);
-            }
-        });
+                    @Override
+                    public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) {
+                        holder.mSpinner.setVisibility(View.GONE);
+                        return false;
+                    }
+                })
+                .into(holder.mImageView);
 
         holder.mView.setOnClickListener(new View.OnClickListener() {
             @Override
