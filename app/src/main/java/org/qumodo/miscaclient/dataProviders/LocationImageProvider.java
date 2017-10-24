@@ -6,6 +6,7 @@ import android.location.Location;
 import android.util.Log;
 
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.nearby.messages.PublishCallback;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -30,10 +31,14 @@ public class LocationImageProvider {
 
     public static List<MiscaImage> ITEMS = new ArrayList<>();
     public static Map<String, MiscaImage> ITEMS_MAP = new HashMap<>();
-    private static LocationImageProviderListener listener;
+    private static ArrayList<LocationImageProviderListener> listeners = new ArrayList<>();
 
     public static void addListener(LocationImageProviderListener listener) {
-        LocationImageProvider.listener = listener;
+        listeners.add(listener);
+    }
+
+    public static void removeListener(LocationImageProviderListener listener) {
+        listeners.remove(listener);
     }
 
     public static void getLocationImages(Location location, Context context) {
@@ -51,7 +56,8 @@ public class LocationImageProvider {
             QMessage message = new QMessage(
                     UserSettingsManager.getMiscaID(),
                     UserSettingsManager.getUserID(),
-                    QMessageType.COMMAND, data
+                    QMessageType.COMMAND,
+                    data
             );
 
             Intent sendMessage = new Intent();
@@ -64,7 +70,6 @@ public class LocationImageProvider {
     }
 
     public static void parseImageData(JSONArray imageData) {
-        Log.d("LocationIMageProcider", "Starting Parse");
         ITEMS_MAP.clear();
         ITEMS.clear();
         for (int i = 0; i < imageData.length(); i++) {
@@ -85,8 +90,8 @@ public class LocationImageProvider {
                 e.printStackTrace();
             }
         }
-        Log.d("LOCPROV", "Got data " + ITEMS.size());
-        if (listener != null) {
+
+        for (LocationImageProviderListener listener : listeners) {
             listener.locationImageProviderHasUpdatedWithData();
         }
     }

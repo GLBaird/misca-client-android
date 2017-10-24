@@ -162,12 +162,10 @@ public class MessageCenter {
     }
 
     private void parseSystemCommand(QMessage message) {
-        Log.d(TAG, "Command Message Received");
         try {
             String command = message.data.getString("command");
             switch (command) {
                 case "image_data":
-                    Log.d(TAG, "Image Data");
                     LocationImageProvider.parseImageData(message.data.getJSONArray("images"));
                     break;
                 default:

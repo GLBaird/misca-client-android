@@ -1,10 +1,11 @@
 package org.qumodo.data.models;
 
 import com.google.android.gms.maps.model.LatLng;
+import com.google.maps.android.clustering.ClusterItem;
 
 import java.util.Map;
 
-public class MiscaImage {
+public class MiscaImage implements ClusterItem {
 
     private String id;
     private String path;
@@ -38,10 +39,6 @@ public class MiscaImage {
         return captions;
     }
 
-    public LatLng getLatLng() {
-        return latLng;
-    }
-
     public Map<String, String> getExifData() {
         return exifData;
     }
@@ -54,5 +51,20 @@ public class MiscaImage {
         }
 
         return found;
+    }
+
+    @Override
+    public LatLng getPosition() {
+        return latLng;
+    }
+
+    @Override
+    public String getTitle() {
+        return classifier;
+    }
+
+    @Override
+    public String getSnippet() {
+        return captions;
     }
 }

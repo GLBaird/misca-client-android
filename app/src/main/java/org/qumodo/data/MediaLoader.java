@@ -148,6 +148,12 @@ public class MediaLoader {
         worker.execute();
     }
 
+    public static void getCoreImage(String imageID, String imagePath, String thumbSize,
+                                    Context context, MediaLoaderListener listener) {
+        LoadMessageImage worker = new LoadMessageImage(imageID, imagePath, thumbSize, context, listener);
+        worker.execute();
+    }
+
     public static void getMissingImageIcon(MediaLoaderListener listener) {
 
     }
@@ -160,6 +166,8 @@ public class MediaLoader {
 
     public static final String IMAGE_STORE_UPLOADS = "uploads";
     public static final String IMAGE_STORE_AVATARS = "avatars";
+    public static final String IMAGE_STORE_CORE_IMAGE = "core_image";
+    public static final String IMAGE_STORE_CORE_IMAGE_THUMB = "core_image_thumb";
 
     public static String storeImageInMediaStore(Bitmap image, String imageStore, Context context) {
         FileOutputStream fos = null;
@@ -228,7 +236,9 @@ public class MediaLoader {
     }
 
     private static class LoadMessageImage extends AsyncTask<String, String, Bitmap> {
-
+        String imageID;
+        String coreImagePath;
+        String thumbSize;
         String messageID;
         Context context;
         MediaLoaderListener listener;
@@ -239,10 +249,19 @@ public class MediaLoader {
             this.listener = listener;
         }
 
+        LoadMessageImage(String imageID, String path, String thumbSize,
+                         Context context, MediaLoaderListener listener) {
+            this.imageID = imageID;
+            this.coreImagePath = path;
+            this.thumbSize = thumbSize;
+            this.context = context;
+            this.listener = listener;
+        }
+
         private Bitmap downloadImageFromServer(String apiRoute, String imageStore) {
-            if (messageID != null) {
+            if (messageID != null || coreImagePath != null) {
                 try {
-                    URL imageStoreURL = getMessageImageURL(messageID, apiRoute);
+                    URL imageStoreURL = getMessageImageURL(messageID != null ? messageID : coreImagePath, apiRoute, thumbSize);
 
                     Log.d(TAG, "Downloading from " + imageStoreURL.toString());
 
@@ -261,7 +280,7 @@ public class MediaLoader {
                     if (is != null) {
                         Bitmap downloadedImage = BitmapFactory.decodeStream(is);
 
-                        File outputFile = getImageFile(messageID, imageStore, appContext);
+                        File outputFile = getImageFile(messageID != null ? messageID : imageID, imageStore, appContext);
                         FileOutputStream fos = new FileOutputStream(outputFile);
                         downloadedImage.compress(Bitmap.CompressFormat.JPEG, 100, fos);
                         fos.close();
@@ -280,16 +299,36 @@ public class MediaLoader {
 
         @Override
         protected Bitmap doInBackground(String... params) {
-            File imageFile = getImageFile(messageID, IMAGE_STORE_UPLOADS, context);
+            File imageFile;
+            if (messageID != null) {
+                imageFile = getImageFile(messageID, IMAGE_STORE_UPLOADS, context);
+            } else {
+                imageFile = getImageFile(imageID, thumbSize == null ?  IMAGE_STORE_CORE_IMAGE : IMAGE_STORE_CORE_IMAGE_THUMB, context);
+            }
+
             Bitmap file = BitmapFactory.decodeFile(imageFile.getAbsolutePath());
 
-            if (file != null) {
+            if (file != null && thumbSize == null) {
                 file = fixImageOrientation(imageFile.getAbsolutePath(), file, true);
             } else {
                 Log.d(TAG, "Downloading from server");
-                String apiRoute = appContext.getString(R.string.online_image_message_route);
-                file = downloadImageFromServer(apiRoute, IMAGE_STORE_UPLOADS);
-                if (file != null)
+                String apiRoute;
+                if (messageID != null)
+                    apiRoute = appContext.getString(R.string.online_image_message_route);
+                else
+                    apiRoute = appContext.getString(R.string.online_core_image_route);
+                if (thumbSize != null) {
+                    apiRoute += "/thumb";
+                }
+                file = downloadImageFromServer(
+                    apiRoute,
+                    messageID != null
+                        ? IMAGE_STORE_UPLOADS
+                        : thumbSize == null
+                            ? IMAGE_STORE_CORE_IMAGE
+                            : IMAGE_STORE_CORE_IMAGE_THUMB
+                );
+                if (file != null && thumbSize == null)
                     file = fixImageOrientation(imageFile.getAbsolutePath(), file, true);
             }
 
@@ -299,7 +338,7 @@ public class MediaLoader {
         @Override
         protected void onPostExecute(Bitmap bitmap) {
             if (bitmap != null) {
-                listener.imageHasLoaded(messageID, bitmap);
+                listener.imageHasLoaded(messageID != null ?  messageID : imageID, bitmap);
             } else {
                 listener.imageHasFailedToLoad(messageID);
             }
@@ -331,12 +370,13 @@ public class MediaLoader {
             String messageID = params[0];
             String apiRoute  = params[1];
             messageToSend    = params[2];
+            String thumbSize = params[3];
 
             Log.d(TAG, "Starting image upload " + messageID + ": " + apiRoute);
 
             if (messageID != null && apiRoute != null) {
                 try {
-                    URL imageStoreURL = getMessageImageURL(messageID, apiRoute);
+                    URL imageStoreURL = getMessageImageURL(messageID, apiRoute, thumbSize);
 
                     HttpURLConnection connection = (HttpURLConnection) imageStoreURL.openConnection();
                     connection.setRequestProperty("User-Agent", "MISCA");
@@ -389,11 +429,13 @@ public class MediaLoader {
     }
 
     @NonNull
-    private static URL getMessageImageURL(String messageID, String apiRoute) throws MalformedURLException {
+    private static URL getMessageImageURL(String imagePath, String apiRoute, String thumbSize)
+            throws MalformedURLException {
         return new URL(
             appContext.getString(R.string.online_image_hostname)
                 + ":" + appContext.getResources().getInteger(R.integer.online_image_store_port)
-                + apiRoute + messageID
+                + apiRoute + imagePath
+                + (thumbSize != null ? "?size=" + thumbSize : "")
         );
     }
 

@@ -7,7 +7,7 @@
     <integer name="online_image_store_port">9800</integer>
     <string name="online_image_message_route">/message_image/</string>
     <string name="online_image_user_avatar_route">/user_avatar/</string>
-    <string name="online_core_image_route">/qumodo_core_image/</string>
+    <string name="online_core_image_route">/core_image</string>
     <string name="misca_id">QSDU_0000000000</string>
 
 </resources>

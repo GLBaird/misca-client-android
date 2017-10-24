@@ -6,7 +6,10 @@ import android.app.Activity;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.net.Uri;
@@ -38,12 +41,15 @@ import org.qumodo.data.DataManager;
 import org.qumodo.data.MediaLoader;
 import org.qumodo.data.models.GroupListItem;
 import org.qumodo.data.models.Message;
+import org.qumodo.data.models.MiscaImage;
 import org.qumodo.miscaclient.BuildConfig;
 import org.qumodo.miscaclient.QMiscaClientApplication;
 import org.qumodo.miscaclient.R;
 import org.qumodo.miscaclient.dataProviders.MessageContentProvider;
 import org.qumodo.miscaclient.dataProviders.UserSettingsManager;
 import org.qumodo.miscaclient.fragments.MessageListFragment;
+import org.qumodo.miscaclient.fragments.QImageListFragment;
+import org.qumodo.miscaclient.fragments.QImageViewFragment;
 import org.qumodo.miscaclient.fragments.QMiscaGroupsListFragment;
 import org.qumodo.miscaclient.fragments.QMiscaMapView;
 import org.qumodo.network.QMessage;
@@ -58,14 +64,19 @@ import java.net.URLEncoder;
 import java.util.UUID;
 
 public class MainActivity extends Activity implements QMiscaGroupsListFragment.OnListFragmentInteractionListener,
-        MessageListFragment.OnMessageListInteractionListener, FragmentManager.OnBackStackChangedListener, View.OnClickListener, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
+        MessageListFragment.OnMessageListInteractionListener, FragmentManager.OnBackStackChangedListener,
+        View.OnClickListener, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener,
+        QImageListFragment.OnListFragmentInteractionListener {
 
     private static final String TAG = "MAIN_ACTIVITY";
 
-    private static final String BUNDLE_KEY_GROUP_ID = "org.qumodo.misca.MainActivity.bundleKey.groupID";
+    private static final String BUNDLE_KEY_GROUP_ID = "org.qumodo.miscaclient.MainActivity.bundleKey.groupID";
     private static final int REQUEST_IMAGE_CAPTURE = 1;
     private static final int REQUEST_IMAGE_GALLERY = 2;
     private static final int REQUEST_CHECK_SETTINGS = 3;
+
+    public static final String ACTION_SHOW_IMAGE_GALLERY = "org.qumodo.miscaclient.MainActivity.action.ShowImageGallery";
+    public static final String ACTION_SHOW_IMAGE_VIEW = "org.qumodo.miscaclient.MainActivity.action.ShowImageView";
 
     private ImageButton chatModeButton;
     private ImageButton objectModeButton;
@@ -82,6 +93,25 @@ public class MainActivity extends Activity implements QMiscaGroupsListFragment.O
     private GoogleApiClient googleApiClient;
 
     private Location userLocation;
+
+    private BroadcastReceiver receiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            switch (intent.getAction()) {
+                case ACTION_SHOW_IMAGE_GALLERY:
+                    onOpenImageListIntent();
+                    break;
+                case ACTION_SHOW_IMAGE_VIEW:
+                    String pathName = intent.getStringExtra(QImageViewFragment.INTENT_IMAGE_PATH);
+                    String imageID = intent.getStringExtra(QImageViewFragment.INTENT_IMAGE_ID);
+                    int service = intent.getIntExtra(QImageViewFragment.INTENT_SERVICE, 0);
+                    if (pathName != null) {
+                        onOpenImagePreviewIntent(pathName, service, imageID);
+                    }
+                    break;
+            }
+        }
+    };
 
     public QMiscaGroupsListFragment getGroupsListFragment() {
         if (mGroupsListFragment == null) {
@@ -121,6 +151,11 @@ public class MainActivity extends Activity implements QMiscaGroupsListFragment.O
             loadMainFragment();
         }
 
+        IntentFilter actions = new IntentFilter();
+        actions.addAction(ACTION_SHOW_IMAGE_GALLERY);
+        actions.addAction(ACTION_SHOW_IMAGE_VIEW);
+        registerReceiver(receiver, actions);
+
         chatModeButton = findViewById(R.id.mode_view_chat_button);
         objectModeButton = findViewById(R.id.mode_view_object_find_button);
         mapModeButton = findViewById(R.id.mode_view_map_button);
@@ -150,7 +185,7 @@ public class MainActivity extends Activity implements QMiscaGroupsListFragment.O
 
     private void loadMainFragment() {
 
-        ContentFrameLayout frame = (ContentFrameLayout) findViewById(R.id.main_activity_fragment_container);
+        ContentFrameLayout frame = findViewById(R.id.main_activity_fragment_container);
         frame.removeAllViews();
 
         Fragment fragment = getFragmentManager()
@@ -288,6 +323,29 @@ public class MainActivity extends Activity implements QMiscaGroupsListFragment.O
         intent.setAction(Intent.ACTION_GET_CONTENT);
 
         startActivityForResult(Intent.createChooser(intent, "Select Picture"), REQUEST_IMAGE_GALLERY);
+    }
+
+    private void onOpenImageListIntent() {
+        Log.d(TAG, "onOpenImageListIntent");
+        Fragment fragment = QImageListFragment.newInstance(3);
+        fragment.setRetainInstance(true);
+        getFragmentManager()
+                .beginTransaction()
+                .replace(R.id.main_activity_fragment_container, fragment, QImageListFragment.TAG)
+                .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
+                .addToBackStack(QMiscaGroupsListFragment.TAG)
+                .commit();
+    }
+
+    private void onOpenImagePreviewIntent(String path, int service, String imageID) {
+        Fragment fragment = QImageViewFragment.newInstance(path, service, imageID);
+        fragment.setRetainInstance(true);
+        getFragmentManager()
+                .beginTransaction()
+                .replace(R.id.main_activity_fragment_container, fragment, QImageViewFragment.TAG)
+                .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
+                .addToBackStack(QMiscaGroupsListFragment.TAG)
+                .commit();
     }
 
 
@@ -479,6 +537,8 @@ public class MainActivity extends Activity implements QMiscaGroupsListFragment.O
                     .remove(current)
                     .commit();
         }
+        if (actionBar != null)
+            actionBar.setDisplayHomeAsUpEnabled(false);
     }
 
     private void addFragment(Fragment fragment, String tag) {
@@ -576,4 +636,11 @@ public class MainActivity extends Activity implements QMiscaGroupsListFragment.O
             mMapView.updateMapView(userLocation, googleApiClient);
         }
     }
+
+    @Override
+    public void onListFragmentInteraction(MiscaImage item) {
+        Log.d(TAG, "Clicked on image " + item.getPath());
+        onOpenImagePreviewIntent(item.getPath(), QImageViewFragment.IMAGE_SERVICE_CORE_IMAGE, item.getId());
+    }
+
 }

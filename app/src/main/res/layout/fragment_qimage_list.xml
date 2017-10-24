@@ -3,11 +3,12 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/list"
-    android:name="org.qumodo.miscaclient.fragments.ImageFragment"
+    android:name="org.qumodo.miscaclient.fragments.QImageListFragment"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:layout_marginLeft="16dp"
     android:layout_marginRight="16dp"
+    android:layout_marginTop="@dimen/list_margin"
     app:layoutManager="LinearLayoutManager"
-    tools:context="org.qumodo.miscaclient.fragments.ImageFragment"
-    tools:listitem="@layout/fragment_image" />
+    tools:context="org.qumodo.miscaclient.fragments.QImageListFragment"
+    tools:listitem="@layout/fragment_qimage" />
