@@ -63,7 +63,9 @@ public class LocationImageProvider {
             Intent sendMessage = new Intent();
             sendMessage.setAction(QTCPSocketService.ACTION_SEND_MESSAGE);
             sendMessage.putExtra(QTCPSocketService.INTENT_KEY_MESSAGE, message.serialize());
-            context.sendBroadcast(sendMessage);
+            if (context != null) {
+                context.sendBroadcast(sendMessage);
+            }
         } catch (JSONException e) {
             e.printStackTrace();
         }

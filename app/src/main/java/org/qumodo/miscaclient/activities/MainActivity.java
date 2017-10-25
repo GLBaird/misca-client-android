@@ -545,7 +545,7 @@ public class MainActivity extends Activity implements QMiscaGroupsListFragment.O
         getFragmentManager()
                 .beginTransaction()
                 .add(R.id.main_activity_fragment_container, fragment, tag)
-                .commit();
+                .commitNow();
     }
 
 

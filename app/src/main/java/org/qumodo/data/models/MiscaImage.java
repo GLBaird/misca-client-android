@@ -1,5 +1,6 @@
 package org.qumodo.data.models;
 
+import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.maps.android.clustering.ClusterItem;
 
@@ -67,4 +68,5 @@ public class MiscaImage implements ClusterItem {
     public String getSnippet() {
         return captions;
     }
+
 }

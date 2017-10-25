@@ -22,12 +22,14 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.maps.android.clustering.Cluster;
 import com.google.maps.android.clustering.ClusterManager;
+import com.google.maps.android.clustering.view.ClusterRenderer;
 
 import org.qumodo.data.models.MiscaImage;
 import org.qumodo.miscaclient.R;
 import org.qumodo.miscaclient.activities.MainActivity;
 import org.qumodo.miscaclient.dataProviders.ImageListProvider;
 import org.qumodo.miscaclient.dataProviders.LocationImageProvider;
+import org.qumodo.miscaclient.renderers.MapClusterRenderer;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -78,25 +80,34 @@ public class QMiscaMapView extends Fragment implements OnMapReadyCallback, Locat
     Marker currentUserPosition;
 
     private void updatePositionOnMap() {
-        LatLng location = getLocationPosition();
-        if (currentUserPosition == null && location != null) {
-            MarkerOptions markerOptions = getUserPositionMarkerOptions(location);
-            currentUserPosition = googleMap.addMarker(markerOptions);
-        } else if (currentUserPosition != null && location != null) {
-            currentUserPosition.setPosition(location);
+        if (!waitForMap) {
+            LatLng location = getLocationPosition();
+            if (currentUserPosition == null && location != null) {
+                Log.d("MAP", "METH 1");
+                MarkerOptions markerOptions = getUserPositionMarkerOptions(location);
+                currentUserPosition = googleMap.addMarker(markerOptions);
+            } else if (currentUserPosition != null && location != null) {
+                Log.d("MAP", "METH 2");
+                currentUserPosition.setPosition(location);
+            }
+            if (googleMap != null && location != null) {
+                Log.d("MAP", "METH 3");
+                googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(getLocationPosition(), 15));
+            }
+            if (userLocation != null) {
+                LocationImageProvider.getLocationImages(userLocation, getContext());
+            }
         }
-        if (googleMap!= null && location != null) {
-            googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(getLocationPosition(), 15));
-        }
-
-        LocationImageProvider.getLocationImages(userLocation, getContext());
     }
+
+    ClusterRenderer<MiscaImage> clusterRenderer;
 
     private void setupClusterManager(GoogleMap map) {
         clusterManager = new ClusterManager<>(getContext(), map);
         clusterManager.setAnimation(true);
         clusterManager.setOnClusterClickListener(this);
         clusterManager.setOnClusterItemClickListener(this);
+        clusterRenderer = new MapClusterRenderer(getContext(), googleMap, clusterManager);
         map.setOnCameraIdleListener(clusterManager);
         map.setOnMarkerClickListener(clusterManager);
     }
@@ -109,6 +120,7 @@ public class QMiscaMapView extends Fragment implements OnMapReadyCallback, Locat
         View view = inflater.inflate(R.layout.fragment_qmisca_map_view, container, false);
         mapFragment = (MapFragment) getFragmentManager().findFragmentByTag("MAP_FRAGMENT");
         LocationImageProvider.addListener(this);
+        Log.d("MAP", "\n\n**** CREATE ****\n\n");
 
         if (mapFragment == null) {
             Log.d("MAP", "creating new map fragment");
@@ -142,9 +154,11 @@ public class QMiscaMapView extends Fragment implements OnMapReadyCallback, Locat
     @Override
     public void onMapReady(GoogleMap googleMap) {
         Log.d("MAP", "LOADED");
+        waitForMap = false;
         this.googleMap = googleMap;
         setupClusterManager(googleMap);
         if (userLocation != null) {
+            Log.d("MAP", "UPDAT LOC");
             updatePositionOnMap();
         }
     }
@@ -154,6 +168,16 @@ public class QMiscaMapView extends Fragment implements OnMapReadyCallback, Locat
         clusterManager.clearItems();
         clusterManager.addItems(LocationImageProvider.ITEMS);
         clusterManager.cluster();
+    }
+
+    private boolean waitForMap = false;
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        currentUserPosition = null;
+        googleMap = null;
+        waitForMap = true;
     }
 
     @Override
