@@ -52,7 +52,7 @@ public class QImageRecyclerViewAdapter extends RecyclerView.Adapter<QImageRecycl
         holder.mSpinner.setVisibility(View.VISIBLE);
 
         Glide.with(holder.mView.getContext())
-                .load(MediaLoader.getURLStringForCoreImage(holder.mItem.getPath().substring(1)))
+                .load(MediaLoader.getURLStringForCoreImageCachedThumb(holder.mItem.getPath().substring(1)))
                 .listener(new RequestListener<Drawable>() {
                     @Override
                     public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {

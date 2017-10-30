@@ -34,6 +34,8 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
+import com.theartofdev.edmodo.cropper.CropImage;
+import com.theartofdev.edmodo.cropper.CropImageView;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -368,8 +370,17 @@ public class MainActivity extends Activity implements QMiscaGroupsListFragment.O
 
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
             storeAndSendImageToMessageList();
-        } else  if (requestCode == REQUEST_IMAGE_GALLERY && resultCode == RESULT_OK && data != null) {
+        } else if (requestCode == REQUEST_IMAGE_GALLERY && resultCode == RESULT_OK && data != null) {
             extractLoadedData(data);
+        } else if (requestCode == CropImage.CROP_IMAGE_ACTIVITY_REQUEST_CODE) {
+            CropImage.ActivityResult result = CropImage.getActivityResult(data);
+            if (resultCode == RESULT_OK) {
+                Uri resultUri = result.getUri();
+                // TODO: Shits and giggles!
+            } else if (resultCode == CropImage.CROP_IMAGE_ACTIVITY_RESULT_ERROR_CODE) {
+                Exception error = result.getError();
+                Log.d(TAG, "Error with crop " + error);
+            }
         }
 
     }
@@ -554,7 +565,9 @@ public class MainActivity extends Activity implements QMiscaGroupsListFragment.O
     }
 
     private void switchModeToObjectFind() {
-//        addFragment(new ImageFragment(), "QMiscaMapView");
+        CropImage.activity()
+                .setGuidelines(CropImageView.Guidelines.ON)
+                .start(this);
     }
 
     private void switchModeToMap() {
@@ -639,8 +652,11 @@ public class MainActivity extends Activity implements QMiscaGroupsListFragment.O
 
     @Override
     public void onListFragmentInteraction(MiscaImage item) {
-        Log.d(TAG, "Clicked on image " + item.getPath());
-        onOpenImagePreviewIntent(item.getPath(), QImageViewFragment.IMAGE_SERVICE_CORE_IMAGE, item.getId());
+        Intent openImageView = new Intent(this, ImageViewActivity.class);
+        openImageView.putExtra(ImageViewActivity.INTENT_IMAGE_ID, item.getId());
+        openImageView.putExtra(ImageViewActivity.INTENT_IMAGE_PATH, item.getPath());
+        openImageView.putExtra(ImageViewActivity.INTENT_SERVICE, QImageViewFragment.IMAGE_SERVICE_CORE_IMAGE);
+        startActivity(openImageView);
     }
 
 }

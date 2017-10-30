@@ -46,6 +46,7 @@ public class LocationImageProvider {
     }
 
     public static void getLocationObjectImages(Location location, String description, Context context) {
+        Log.d("LocationProvider", "Search with object: " + description);
         JSONObject data = new JSONObject();
         try {
             data.put("command", "core_image_search");
@@ -77,6 +78,8 @@ public class LocationImageProvider {
         for (int i = 0; i < imageData.length(); i++) {
             try {
                 JSONObject image = (JSONObject) imageData.get(i);
+
+                Log.d("LocationProvider", "Found: " + image.getString("classifiers") + image.getString("captions"));
 
                 MiscaImage parsed = new MiscaImage(
                         image.getString("id"),

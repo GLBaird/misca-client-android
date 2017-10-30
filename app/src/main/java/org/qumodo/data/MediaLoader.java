@@ -446,6 +446,10 @@ public class MediaLoader {
         return getURLStringForCoreImage(imagePath, null);
     }
 
+    public static String getURLStringForCoreImageCachedThumb(String imagePath) {
+        return getURLString(R.string.online_core_image_thumbs_route, imagePath, null);
+    }
+
     public static String getURLStringForCoreImage(String imagePath, String thumbSize) {
         return getURLString(R.string.online_core_image_route, imagePath, thumbSize);
     }

@@ -57,7 +57,7 @@ public class MapClusterRenderer extends DefaultClusterRenderer<MiscaImage> {
         super.onClusterItemRendered(clusterItem, marker);
         Glide.with(context)
                 .asBitmap()
-                .load(MediaLoader.getURLStringForCoreImage(clusterItem.getPath().substring(1)))
+                .load(MediaLoader.getURLStringForCoreImageCachedThumb(clusterItem.getPath().substring(1)))
                 .apply(requestOptions)
                 .into(new SimpleTarget<Bitmap>() {
                     @Override
