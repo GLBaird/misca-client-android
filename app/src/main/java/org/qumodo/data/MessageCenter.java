@@ -164,9 +164,13 @@ public class MessageCenter {
     private void parseSystemCommand(QMessage message) {
         try {
             String command = message.data.getString("command");
+            Log.d(TAG, "Command received: " + command);
             switch (command) {
                 case "image_data":
                     LocationImageProvider.parseImageData(message.data.getJSONArray("images"));
+                    break;
+                case "enriched_image_data":
+                    Log.d(TAG, "received enriched image data " + message.data.toString());
                     break;
                 default:
                     Log.e(TAG, "Unknown command " + command);

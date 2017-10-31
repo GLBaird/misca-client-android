@@ -50,6 +50,7 @@ import org.qumodo.miscaclient.R;
 import org.qumodo.miscaclient.dataProviders.MessageContentProvider;
 import org.qumodo.miscaclient.dataProviders.UserSettingsManager;
 import org.qumodo.miscaclient.fragments.MessageListFragment;
+import org.qumodo.miscaclient.fragments.ObjectSearchFragment;
 import org.qumodo.miscaclient.fragments.QImageListFragment;
 import org.qumodo.miscaclient.fragments.QImageViewFragment;
 import org.qumodo.miscaclient.fragments.QMiscaGroupsListFragment;
@@ -79,6 +80,7 @@ public class MainActivity extends Activity implements QMiscaGroupsListFragment.O
 
     public static final String ACTION_SHOW_IMAGE_GALLERY = "org.qumodo.miscaclient.MainActivity.action.ShowImageGallery";
     public static final String ACTION_SHOW_IMAGE_VIEW = "org.qumodo.miscaclient.MainActivity.action.ShowImageView";
+    public static final String ACTION_OBJECT_SEARCH_RESULTS = "org.qumodo.miscaclient.MainActivity.action.ObjectSearchResults";
 
     private ImageButton chatModeButton;
     private ImageButton objectModeButton;
@@ -110,6 +112,9 @@ public class MainActivity extends Activity implements QMiscaGroupsListFragment.O
                     if (pathName != null) {
                         onOpenImagePreviewIntent(pathName, service, imageID);
                     }
+                    break;
+                case ACTION_OBJECT_SEARCH_RESULTS:
+
                     break;
             }
         }
@@ -175,6 +180,13 @@ public class MainActivity extends Activity implements QMiscaGroupsListFragment.O
         if (googleApiClient != null) {
             googleApiClient.connect();
         }
+
+        IntentFilter actions = new IntentFilter();
+        actions.addAction(ACTION_SHOW_IMAGE_GALLERY);
+        actions.addAction(ACTION_SHOW_IMAGE_VIEW);
+        actions.addAction(ACTION_OBJECT_SEARCH_RESULTS);
+        registerReceiver(receiver, actions);
+        Log.d(TAG, "Intent receiver registered");
     }
 
     @Override
@@ -182,6 +194,9 @@ public class MainActivity extends Activity implements QMiscaGroupsListFragment.O
         if (googleApiClient != null) {
             googleApiClient.disconnect();
         }
+
+        Log.d(TAG, "receiver unregistered");
+        unregisterReceiver(receiver);
         super.onStop();
     }
 
@@ -363,6 +378,16 @@ public class MainActivity extends Activity implements QMiscaGroupsListFragment.O
         }
     }
 
+    private void searchForObject(Uri imageURI) {
+        MediaLoader.imageSearch(imageURI);
+        Fragment fragment = ObjectSearchFragment.newInstance(imageURI.toString());
+        removeCurrentFragment();
+        getFragmentManager()
+                .beginTransaction()
+                .add(R.id.main_activity_fragment_container, fragment, ObjectSearchFragment.TAG)
+                .commit();
+    }
+
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -375,8 +400,7 @@ public class MainActivity extends Activity implements QMiscaGroupsListFragment.O
         } else if (requestCode == CropImage.CROP_IMAGE_ACTIVITY_REQUEST_CODE) {
             CropImage.ActivityResult result = CropImage.getActivityResult(data);
             if (resultCode == RESULT_OK) {
-                Uri resultUri = result.getUri();
-                // TODO: Shits and giggles!
+                searchForObject(result.getUri());
             } else if (resultCode == CropImage.CROP_IMAGE_ACTIVITY_RESULT_ERROR_CODE) {
                 Exception error = result.getError();
                 Log.d(TAG, "Error with crop " + error);

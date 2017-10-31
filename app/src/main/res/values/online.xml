@@ -8,6 +8,7 @@
     <string name="online_image_message_route">/message_image/</string>
     <string name="online_image_user_avatar_route">/user_avatar/</string>
     <string name="online_core_image_route">/core_image/</string>
+    <string name="online_object_search">/object_search/</string>
     <string name="online_core_image_thumbs_route">/core_image/preview_thumb/</string>
     <string name="misca_id">QSDU_0000000000</string>
 

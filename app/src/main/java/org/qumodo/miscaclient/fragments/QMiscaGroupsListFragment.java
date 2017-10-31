@@ -31,8 +31,12 @@ public class QMiscaGroupsListFragment extends Fragment {
     BroadcastReceiver receiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            GroupsContentProvider.reloadData(getContext());
-            adapter.notifyDataSetChanged();
+            switch (intent.getAction()) {
+                case MessageCenter.RELOAD_UI:
+                    GroupsContentProvider.reloadData(getContext());
+                    adapter.notifyDataSetChanged();
+                    break;
+            }
         }
     };
 
@@ -51,10 +55,6 @@ public class QMiscaGroupsListFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(MessageCenter.RELOAD_UI);
-        getContext().registerReceiver(receiver, intentFilter);
 
         if (getArguments() != null) {
             mColumnCount = getArguments().getInt(ARG_COLUMN_COUNT);
@@ -93,6 +93,10 @@ public class QMiscaGroupsListFragment extends Fragment {
     public void onAttach(Context context) {
         super.onAttach(context);
 
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(MessageCenter.RELOAD_UI);
+        getContext().registerReceiver(receiver, intentFilter);
+
         if (context instanceof OnListFragmentInteractionListener) {
             mListener = (OnListFragmentInteractionListener) context;
         } else {
@@ -103,6 +107,7 @@ public class QMiscaGroupsListFragment extends Fragment {
 
     @Override
     public void onDetach() {
+        getContext().unregisterReceiver(receiver);
         super.onDetach();
         mListener = null;
     }

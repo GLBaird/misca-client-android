@@ -13,6 +13,7 @@ import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
 import android.media.ExifInterface;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 import android.util.Log;
@@ -23,6 +24,7 @@ import org.qumodo.miscaclient.R;
 import org.qumodo.miscaclient.dataProviders.UserSettingsManager;
 import org.qumodo.miscaclient.fragments.MessageListFragment;
 import org.qumodo.network.QMessage;
+import org.qumodo.network.QMessageType;
 import org.qumodo.services.QTCPSocketService;
 
 import java.io.BufferedOutputStream;
@@ -79,6 +81,12 @@ public class MediaLoader {
         paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_IN));
         canvas.drawBitmap(bitmap, rect, rect, paint);
         return output;
+    }
+
+    public static void imageSearch(Uri imageURI) {
+        UploadImageToServer task = new UploadImageToServer(appContext);
+        task.imageURI = imageURI;
+        task.execute();
     }
 
     public static void getUserAvatar(String userID, MediaLoaderListener listener) {
@@ -347,14 +355,30 @@ public class MediaLoader {
 
         private Context context;
         String messageToSend;
+        Uri imageURI;
+
 
         UploadImageToServer(Context context) {
             this.context = context;
         }
 
         private byte[] loadImageDataAsByteArray(String messageID) {
+            File imageFile;
+            if (imageURI == null) {
+                imageFile = getImageFile(messageID, IMAGE_STORE_UPLOADS, context);
+            } else {
+                imageFile = new File(imageURI.getPath());
+            }
+            return getBytes(imageFile);
+        }
+
+        private byte[] loadImageDataAsByteArray(Uri imageURI) {
+            File imageFile = new File(imageURI.getPath());
+            return getBytes(imageFile);
+        }
+
+        private byte[] getBytes(File imageFile) {
             Log.d(TAG, "Loading Image Data");
-            File imageFile = getImageFile(messageID, IMAGE_STORE_UPLOADS, context);
             Log.d(TAG, "PATH - " + imageFile.getAbsolutePath());
             Bitmap image = BitmapFactory.decodeFile(imageFile.getAbsolutePath());
             image = fixImageOrientation(imageFile.getAbsolutePath(), image, false);
@@ -363,44 +387,69 @@ public class MediaLoader {
             return bos.toByteArray();
         }
 
+        private boolean pushDataToServer(URL uploadURL, byte[] imageBytes) {
+            try {
+                HttpURLConnection connection = (HttpURLConnection) uploadURL.openConnection();
+                connection.setRequestProperty("User-Agent", "MISCA");
+                connection.setRequestProperty("userID", UserSettingsManager.getUserID());
+                connection.setRequestProperty("User-Certificate", UserSettingsManager.getHashedClientPublicKeyString());
+                connection.setRequestProperty("Content-Type", "image/jpeg");
+                connection.setDoOutput(true);
+                connection.setRequestMethod("POST");
+                connection.setUseCaches(false);
+                connection.connect();
+
+                BufferedOutputStream out = new BufferedOutputStream(connection.getOutputStream());
+                out.write(imageBytes);
+                out.flush();
+                out.close();
+
+                int responseCode = connection.getResponseCode();
+                return responseCode == 200;
+
+            } catch (IOException e) {
+                Log.d(TAG, "Failed to upload image");
+                e.printStackTrace();
+                return false;
+            }
+        }
+
         @Override
         protected Boolean doInBackground(String... params) {
-            String messageID = params[0];
-            String apiRoute  = params[1];
-            messageToSend    = params[2];
-            String thumbSize = params[3];
+            if (imageURI == null) {
+                String messageID = params[0];
+                String apiRoute = params[1];
+                messageToSend = params[2];
+                String thumbSize = null;
+                if (params.length == 4) {
+                    thumbSize = params[3];
+                }
 
-            Log.d(TAG, "Starting image upload " + messageID + ": " + apiRoute);
+                Log.d(TAG, "Starting image upload " + messageID + ": " + apiRoute);
 
-            if (messageID != null && apiRoute != null) {
+                if (messageID != null && apiRoute != null) {
+                    try {
+                        URL imageStoreURL = getMessageImageURL(messageID, apiRoute, thumbSize);
+                        byte[] imageData = loadImageDataAsByteArray(messageID);
+                        return pushDataToServer(imageStoreURL, imageData);
+                    } catch (MalformedURLException e) {
+                        Log.d(TAG, "Failed to upload image");
+                        e.printStackTrace();
+                        return false;
+                    }
+
+                }
+            } else {
                 try {
-                    URL imageStoreURL = getMessageImageURL(messageID, apiRoute, thumbSize);
-
-                    HttpURLConnection connection = (HttpURLConnection) imageStoreURL.openConnection();
-                    connection.setRequestProperty("User-Agent", "MISCA");
-                    connection.setRequestProperty("userID", UserSettingsManager.getUserID());
-                    connection.setRequestProperty("User-Certificate", UserSettingsManager.getHashedClientPublicKeyString());
-                    connection.setRequestProperty("Content-Type", "image/jpeg");
-                    connection.setDoOutput(true);
-                    connection.setRequestMethod("POST");
-                    connection.setUseCaches(false);
-                    connection.connect();
-
-                    BufferedOutputStream out = new BufferedOutputStream(connection.getOutputStream());
-                    out.write(loadImageDataAsByteArray(messageID));
-                    out.flush();
-                    out.close();
-
-                    int responseCode = connection.getResponseCode();
-                    return responseCode == 200;
-
-                } catch (IOException e) {
+                    URL objectSearchAPI = new URL(getURLStringForObjectSearch());
+                    byte[] imageData = loadImageDataAsByteArray(imageURI);
+                    return pushDataToServer(objectSearchAPI, imageData);
+                } catch (MalformedURLException e) {
                     Log.d(TAG, "Failed to upload image");
                     e.printStackTrace();
                     return false;
                 }
             }
-
             return true;
         }
 
@@ -412,15 +461,17 @@ public class MediaLoader {
             } else {
                 Toast.makeText(appContext, "Image uploaded", Toast.LENGTH_SHORT)
                      .show();
-                Intent updateUI = new Intent();
-                updateUI.setAction(MessageListFragment.ACTION_IMAGE_ADDED);
-                appContext.sendBroadcast(updateUI);
+                if (imageURI == null) {
+                    Intent updateUI = new Intent();
+                    updateUI.setAction(MessageListFragment.ACTION_IMAGE_ADDED);
+                    appContext.sendBroadcast(updateUI);
 
-                if (messageToSend != null) {
-                    Intent sendImageMessage = new Intent();
-                    sendImageMessage.setAction(QTCPSocketService.ACTION_SEND_MESSAGE);
-                    sendImageMessage.putExtra(QTCPSocketService.INTENT_KEY_MESSAGE, messageToSend);
-                    appContext.sendBroadcast(sendImageMessage);
+                    if (messageToSend != null) {
+                        Intent sendImageMessage = new Intent();
+                        sendImageMessage.setAction(QTCPSocketService.ACTION_SEND_MESSAGE);
+                        sendImageMessage.putExtra(QTCPSocketService.INTENT_KEY_MESSAGE, messageToSend);
+                        appContext.sendBroadcast(sendImageMessage);
+                    }
                 }
             }
         }
@@ -454,6 +505,10 @@ public class MediaLoader {
         return getURLString(R.string.online_core_image_route, imagePath, thumbSize);
     }
 
+    public static String getURLStringForObjectSearch() {
+        return getURLString(R.string.online_object_search, UserSettingsManager.getUserID(), null);
+    }
+
     public static String getURLStringForAvatar(String userID) {
         return getURLString(R.string.online_image_user_avatar_route, userID, null);
     }
@@ -466,6 +521,7 @@ public class MediaLoader {
                 + ":" + appContext.getResources().getInteger(R.integer.online_image_store_port)
                 + apiRoute + imagePath
                 + (thumbSize != null ? "?size=" + thumbSize : "")
+                + (thumbSize != null ? "&" : "?") + "userID=" + UserSettingsManager.getUserID()
         );
     }
 

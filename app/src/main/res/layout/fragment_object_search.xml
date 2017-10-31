@@ -1,0 +1,27 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="org.qumodo.miscaclient.fragments.ObjectSearchFragment"
+    android:orientation="vertical"
+    android:gravity="center_horizontal"
+    android:layout_margin="30dp">
+
+    <ImageView
+        android:id="@+id/object_view"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginBottom="20dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Searching for Similar Objects"
+        android:layout_marginBottom="10dp"/>
+
+    <ProgressBar
+        android:layout_width="20dp"
+        android:layout_height="20dp" />
+
+</LinearLayout>

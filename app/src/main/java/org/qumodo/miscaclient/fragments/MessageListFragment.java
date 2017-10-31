@@ -96,13 +96,6 @@ public class MessageListFragment extends Fragment implements View.OnClickListene
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        IntentFilter receiverIntent = new IntentFilter();
-        receiverIntent.addAction(MessageCenter.RELOAD_UI);
-        receiverIntent.addAction(MessageCenter.NEW_LIST_ITEM);
-        receiverIntent.addAction(ACTION_LAST_IMAGE_LOADED);
-        receiverIntent.addAction(ACTION_IMAGE_ADDED);
-        getContext().registerReceiver(receiver, receiverIntent);
-
         if (getArguments() != null) {
             mColumnCount = getArguments().getInt(ARG_COLUMN_COUNT);
         }
@@ -160,10 +153,18 @@ public class MessageListFragment extends Fragment implements View.OnClickListene
             throw new RuntimeException(context.toString()
                     + " must implement OnMessageListInteractionListener");
         }
+
+        IntentFilter receiverIntent = new IntentFilter();
+        receiverIntent.addAction(MessageCenter.RELOAD_UI);
+        receiverIntent.addAction(MessageCenter.NEW_LIST_ITEM);
+        receiverIntent.addAction(ACTION_LAST_IMAGE_LOADED);
+        receiverIntent.addAction(ACTION_IMAGE_ADDED);
+        getContext().registerReceiver(receiver, receiverIntent);
     }
 
     @Override
     public void onDetach() {
+        getContext().unregisterReceiver(receiver);
         super.onDetach();
         mListener = null;
     }
