@@ -12,6 +12,7 @@ import org.json.JSONObject;
 import org.qumodo.data.MediaLoader;
 import org.qumodo.data.MessageCenter;
 import org.qumodo.miscaclient.dataProviders.GroupsContentProvider;
+import org.qumodo.miscaclient.dataProviders.ServerDetails;
 import org.qumodo.miscaclient.dataProviders.UserSettingsManager;
 import org.qumodo.network.QMessage;
 import org.qumodo.network.QMessageType;
@@ -101,8 +102,8 @@ public class QMiscaClientApplication extends Application {
         filter.addAction(APPLICATION_TEAR_SOCKET_DOWN);
         registerReceiver(receiver, filter);
 
-        hostname = getString(R.string.online_socket_hostname);
-        port = getResources().getInteger(R.integer.online_socket_port);
+        hostname = ServerDetails.getSocketHostName();
+        port = ServerDetails.getSocketPortNumber();
 
         UserSettingsManager.loadSharedPreferences(getApplicationContext());
         setupDataProviders();

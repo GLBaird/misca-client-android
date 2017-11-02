@@ -48,6 +48,7 @@ import org.qumodo.miscaclient.BuildConfig;
 import org.qumodo.miscaclient.QMiscaClientApplication;
 import org.qumodo.miscaclient.R;
 import org.qumodo.miscaclient.dataProviders.MessageContentProvider;
+import org.qumodo.miscaclient.dataProviders.ServerDetails;
 import org.qumodo.miscaclient.dataProviders.UserSettingsManager;
 import org.qumodo.miscaclient.fragments.MessageListFragment;
 import org.qumodo.miscaclient.fragments.ObjectSearchFragment;
@@ -497,6 +498,7 @@ public class MainActivity extends Activity implements QMiscaGroupsListFragment.O
             case android.R.id.home:
                 getFragmentManager().popBackStack();
                 return true;
+
             case R.id.action_user_a:
                 UserSettingsManager.setUserID(UserSettingsManager.USER_ID_A);
                 item1.setTitle("USER A **SELECTED");
@@ -509,6 +511,26 @@ public class MainActivity extends Activity implements QMiscaGroupsListFragment.O
                 item1.setTitle("USER A");
                 item2.setTitle("USER B **SELECTED");
                 checkForLoadingFragment();
+                return true;
+
+            case R.id.action_config_host:
+                ServerDetails.showHostNameDialoge(this);
+                return true;
+
+            case R.id.action_config_port:
+                ServerDetails.showPortNumberDialog(this);
+                return true;
+
+            case R.id.action_restart_socket:
+                Intent closeSocket = new Intent();
+                closeSocket.setAction(QTCPSocketService.ACTION_CLOSE_SOCKET);
+                sendBroadcast(closeSocket);
+
+                Intent socketService = new Intent(this, QTCPSocketService.class);
+                socketService.putExtra(QTCPSocketService.INTENT_KEY_HOSTNAME, ServerDetails.getSocketHostName());
+                socketService.putExtra(QTCPSocketService.INTENT_KEY_PORT, ServerDetails.getSocketPortNumber());
+                startService(socketService);
+
                 return true;
 
             default:

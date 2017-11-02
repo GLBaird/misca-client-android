@@ -87,12 +87,28 @@ public class UserSettingsManager {
             Log.e(TAG, "Error, shared preferences not loaded Setting Value: " + key + ": " + value);
     }
 
+    public static void setValue(String key, int value) {
+        if (mSharedPreferences != null) {
+            SharedPreferences.Editor editor = mSharedPreferences.edit();
+            editor.putInt(key, value);
+            editor.apply();
+        } else
+            Log.e(TAG, "Error, shared preferences not loaded Setting Value: " + key + ": " + value);
+    }
+
     @Nullable
     public static String getValue(String key, String defaultValue) {
         if (mSharedPreferences != null)
             return mSharedPreferences.getString(key, defaultValue);
         Log.e(TAG, "Error, shared preferences not loaded Getting Value: " + key);
         return null;
+    }
+
+    public static int getValue(String key, int defaultValue) {
+        if (mSharedPreferences != null)
+            return mSharedPreferences.getInt(key, defaultValue);
+        Log.e(TAG, "Error, shared preferences not loaded Getting Value: " + key);
+        return -1;
     }
 
     @Nullable

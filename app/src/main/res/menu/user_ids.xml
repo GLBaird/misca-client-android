@@ -11,5 +11,20 @@
         android:title="USER B"
         app:showAsAction="never"/>
 
+    <item
+        android:id="@+id/action_config_host"
+        android:title="Config Server Address"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_config_port"
+        android:title="Config Port Number"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_restart_socket"
+        android:title="Restart socket"
+        app:showAsAction="never" />
+
 
 </menu>

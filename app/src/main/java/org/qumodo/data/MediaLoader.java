@@ -21,6 +21,7 @@ import android.widget.Toast;
 
 import org.json.JSONException;
 import org.qumodo.miscaclient.R;
+import org.qumodo.miscaclient.dataProviders.ServerDetails;
 import org.qumodo.miscaclient.dataProviders.UserSettingsManager;
 import org.qumodo.miscaclient.fragments.MessageListFragment;
 import org.qumodo.network.QMessage;
@@ -479,7 +480,7 @@ public class MediaLoader {
 
     public static String getURLString(int apiRef, String fileRef, String thumbnailSize) {
         String api = appContext.getResources().getString(apiRef);
-        return appContext.getString(R.string.online_image_hostname)
+        return ServerDetails.getMediaServerHostName()
                 + ":" + appContext.getResources().getInteger(R.integer.online_image_store_port)
                 + api + (thumbnailSize != null ? "thumb/" : "")
                 + fileRef + (thumbnailSize != null ? "?size=" + thumbnailSize : "");
@@ -517,7 +518,7 @@ public class MediaLoader {
     private static URL getMessageImageURL(String imagePath, String apiRoute, String thumbSize)
             throws MalformedURLException {
         return new URL(
-            appContext.getString(R.string.online_image_hostname)
+            ServerDetails.getMediaServerHostName()
                 + ":" + appContext.getResources().getInteger(R.integer.online_image_store_port)
                 + apiRoute + imagePath
                 + (thumbSize != null ? "?size=" + thumbSize : "")
