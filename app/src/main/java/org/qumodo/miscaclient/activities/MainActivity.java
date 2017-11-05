@@ -565,6 +565,8 @@ public class MainActivity extends Activity implements QMiscaGroupsListFragment.O
                 if (currentMode != R.id.mode_view_object_find_button) {
                     changeMode(R.id.mode_view_object_find_button, objectModeButton, R.drawable.ic_camera_alt_blue_24dp);
                     switchModeToObjectFind();
+                } else {
+                    switchModeToObjectFind();
                 }
                 break;
 

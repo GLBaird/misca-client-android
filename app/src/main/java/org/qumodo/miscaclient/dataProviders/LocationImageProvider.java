@@ -50,8 +50,10 @@ public class LocationImageProvider {
         JSONObject data = new JSONObject();
         try {
             data.put("command", "core_image_search");
-            data.put("lat", location.getLatitude());
-            data.put("lon", location.getLongitude());
+            if (location != null) {
+                data.put("lat", location.getLatitude());
+                data.put("lon", location.getLongitude());
+            }
             data.put("classifier", description);
 
             QMessage message = new QMessage(

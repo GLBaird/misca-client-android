@@ -102,11 +102,11 @@ public class QMiscaClientApplication extends Application {
         filter.addAction(APPLICATION_TEAR_SOCKET_DOWN);
         registerReceiver(receiver, filter);
 
-        hostname = ServerDetails.getSocketHostName();
-        port = ServerDetails.getSocketPortNumber();
-
         UserSettingsManager.loadSharedPreferences(getApplicationContext());
         setupDataProviders();
+
+        hostname = ServerDetails.getSocketHostName();
+        port = ServerDetails.getSocketPortNumber();
 
         messageCenter = new MessageCenter(getApplicationContext());
 

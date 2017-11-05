@@ -12,6 +12,7 @@ import org.qumodo.data.models.Message;
 import org.qumodo.miscaclient.dataProviders.LocationImageProvider;
 import org.qumodo.miscaclient.dataProviders.MessageContentProvider;
 import org.qumodo.miscaclient.dataProviders.UserSettingsManager;
+import org.qumodo.miscaclient.fragments.ObjectSearchFragment;
 import org.qumodo.network.QMessage;
 import org.qumodo.services.QTCPSocketService;
 import org.qumodo.network.QMessageType;
@@ -171,6 +172,12 @@ public class MessageCenter {
                     break;
                 case "enriched_image_data":
                     Log.d(TAG, "received enriched image data " + message.data.toString());
+                    break;
+                case "classifier_result":
+                    Intent classification = new Intent();
+                    classification.setAction(ObjectSearchFragment.ACTION_CLASSIFICATION_RESULT);
+                    classification.putExtra(ObjectSearchFragment.INTENT_CLASSIFICATION, message.data.getString("classification"));
+                    appContext.sendBroadcast(classification);
                     break;
                 default:
                     Log.e(TAG, "Unknown command " + command);

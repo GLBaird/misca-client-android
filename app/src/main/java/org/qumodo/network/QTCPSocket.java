@@ -66,6 +66,7 @@ public class QTCPSocket {
         Log.d(LOG_TAG, "Making connection");
         try {
             InetAddress serverAddress = InetAddress.getByName(hostname);
+            Log.d(LOG_TAG, "PORT: " + port);
             socket = new Socket(serverAddress, port);
             setupBuffers();
             listener.socketConnectionEstablished();
