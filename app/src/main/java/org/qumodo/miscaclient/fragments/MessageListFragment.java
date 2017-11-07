@@ -68,6 +68,9 @@ public class MessageListFragment extends Fragment implements View.OnClickListene
                 case MessageCenter.RELOAD_UI:
                     adapter.notifyDataSetChanged();
                     break;
+                case MessageCenter.REMOVE_LAST_ITEM:
+                    adapter.notifyItemRemoved(messageCount);
+                    recyclerView.scrollToPosition(messageCount - 1);
                 case ACTION_IMAGE_ADDED:
                     recyclerView.scrollToPosition(messageCount - 1);
                     break;
@@ -159,6 +162,7 @@ public class MessageListFragment extends Fragment implements View.OnClickListene
         receiverIntent.addAction(MessageCenter.NEW_LIST_ITEM);
         receiverIntent.addAction(ACTION_LAST_IMAGE_LOADED);
         receiverIntent.addAction(ACTION_IMAGE_ADDED);
+        receiverIntent.addAction(MessageCenter.REMOVE_LAST_ITEM);
         getContext().registerReceiver(receiver, receiverIntent);
     }
 

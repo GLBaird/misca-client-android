@@ -8,7 +8,9 @@ import android.util.Log;
 import android.widget.Toast;
 
 import org.json.JSONException;
+import org.qumodo.data.models.EnrichmentData;
 import org.qumodo.data.models.Message;
+import org.qumodo.miscaclient.dataProviders.DataEnrichmentProvider;
 import org.qumodo.miscaclient.dataProviders.LocationImageProvider;
 import org.qumodo.miscaclient.dataProviders.MessageContentProvider;
 import org.qumodo.miscaclient.dataProviders.UserSettingsManager;
@@ -29,6 +31,7 @@ public class MessageCenter {
     public static final String USER_AUTHORISED = "org.qumodo.data.MessageCenter.UserAuthorised";
     public static final String RELOAD_UI = "org.qumodo.data.MessageCenter.ReloadUI";
     public static final String NEW_LIST_ITEM = "org.qumodo.date.MessageCenter.NewListItem";
+    public static final String REMOVE_LAST_ITEM = "org.qumodo.date.MessageCenter.RemoveLastItem";
     public static final String INTENT_KEY_GROUP_ID = "org.qumodo.data.MessageCenter.GroupID";
 
     private static Context appContext;
@@ -172,6 +175,8 @@ public class MessageCenter {
                     break;
                 case "enriched_image_data":
                     Log.d(TAG, "received enriched image data " + message.data.toString());
+                    EnrichmentData parsedData = EnrichmentData.parseJSON(message.data);
+                    DataEnrichmentProvider.getProvider().addEnrichment(parsedData);
                     break;
                 case "classifier_result":
                     Intent classification = new Intent();

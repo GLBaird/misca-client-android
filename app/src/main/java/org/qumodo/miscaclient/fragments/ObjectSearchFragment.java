@@ -23,6 +23,9 @@ import org.qumodo.miscaclient.R;
 import org.qumodo.miscaclient.dataProviders.ImageListProvider;
 import org.qumodo.miscaclient.dataProviders.LocationImageProvider;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 /**
  * A simple {@link Fragment} subclass.
  * Use the {@link ObjectSearchFragment#newInstance} factory method to
@@ -42,7 +45,14 @@ public class ObjectSearchFragment extends Fragment implements LocationImageProvi
         public void onReceive(Context context, Intent intent) {
             switch (intent.getAction()) {
                 case ACTION_CLASSIFICATION_RESULT:
-                    String classification = intent.getStringExtra(INTENT_CLASSIFICATION).replace("_", " ");
+                    String classification = intent.getStringExtra(INTENT_CLASSIFICATION);
+                    if (classification.contains("_")) {
+                        Pattern p = Pattern.compile("[a-z]+_[a-z]+");
+                        Matcher m = p.matcher(classification);
+                        while(m.find()) {
+                            classification += " " + m.group().replace("_", " ");
+                        }
+                    }
                     Toast.makeText(getContext(), classification, Toast.LENGTH_SHORT).show();
                     LocationImageProvider.getLocationObjectImages(null, classification, getContext());
                     break;

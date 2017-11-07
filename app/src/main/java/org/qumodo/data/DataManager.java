@@ -4,7 +4,9 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.support.annotation.Nullable;
 import android.util.Log;
+import android.widget.Toast;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -284,6 +286,33 @@ public class DataManager {
             err.printStackTrace();
             return null;
         }
+    }
+
+    @Nullable
+    public Message updateMiscaQuestionToAnswered(String id, String groupID, String questionText, String response) {
+        try {
+            JSONObject data = new JSONObject();
+            data.put("text", questionText);
+
+            ContentValues cv = new ContentValues();
+            cv.put(Messages.MessagesEntry.COLUMN_NAME_TYPE, QMessageType.MISCA_TEXT.value);
+            cv.put(Messages.MessagesEntry.COLUMN_NAME_DATA, data.toString());
+
+            SQLiteDatabase db = helper.getWritableDatabase();
+            db.update(Messages.MessagesEntry.TABLE_NAME, cv, Messages.MessagesEntry._ID + " = ?", new String[]{id});
+
+            return addNewMessage(response, QMessageType.TEXT, groupID, null, null, null);
+        } catch (JSONException e) {
+            e.printStackTrace();
+            Toast.makeText(appContext, "Misca Error - Failed to response to question", Toast.LENGTH_SHORT).show();
+        }
+
+        return null;
+    }
+
+    public void removeMiscaQuestion(String id) {
+        SQLiteDatabase db = helper.getWritableDatabase();
+        db.delete(Messages.MessagesEntry.TABLE_NAME, Messages.MessagesEntry._ID + " = ?", new String[]{id});
     }
 
     public void setMessageError(String messageID, boolean error) {

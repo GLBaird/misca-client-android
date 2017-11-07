@@ -47,7 +47,8 @@ public class Message {
 
         JSONObject parsed = DataLoader.loadJSONObject(data);
         try {
-            if (parsed != null && this.type == QMessageType.TEXT) {
+            if (parsed != null && (this.type == QMessageType.TEXT
+                    || this.type == QMessageType.MISCA_QUESTION)) {
                 this.text = parsed.getString("text");
             } else if (parsed != null && this.type == QMessageType.PICTURE) {
                 this.text = parsed.getString("caption");
@@ -124,6 +125,13 @@ public class Message {
         sendError = error;
     }
 
+    public void setType(QMessageType type) {
+        this.type = type;
+    }
+
+    public void setText(String text) {
+        this.text = text;
+    }
 
     @Override
     public String toString() {

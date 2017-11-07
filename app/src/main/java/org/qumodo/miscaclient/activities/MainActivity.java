@@ -47,7 +47,9 @@ import org.qumodo.data.models.MiscaImage;
 import org.qumodo.miscaclient.BuildConfig;
 import org.qumodo.miscaclient.QMiscaClientApplication;
 import org.qumodo.miscaclient.R;
+import org.qumodo.miscaclient.dataProviders.LocationProvider;
 import org.qumodo.miscaclient.dataProviders.MessageContentProvider;
+import org.qumodo.miscaclient.dataProviders.MiscaWorkflowManager;
 import org.qumodo.miscaclient.dataProviders.ServerDetails;
 import org.qumodo.miscaclient.dataProviders.UserSettingsManager;
 import org.qumodo.miscaclient.fragments.MessageListFragment;
@@ -173,6 +175,15 @@ public class MainActivity extends Activity implements QMiscaGroupsListFragment.O
         mapModeButton.setOnClickListener(this);
 
         googleApiClient = new GoogleApiClient.Builder(this, this, this).addApi(LocationServices.API).build();
+        LocationProvider
+                .getSharedLocationProvider()
+                .setApiClient(googleApiClient);
+
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[] { Manifest.permission.ACCESS_FINE_LOCATION },
+                    PERMISSION_ACCESS_FINE_LOCATION);
+        }
     }
 
     @Override
@@ -314,6 +325,7 @@ public class MainActivity extends Activity implements QMiscaGroupsListFragment.O
 
     @Override
     public void onOpenCameraIntent(String message) {
+        LocationProvider.getSharedLocationProvider().updateLocation(this);
         newImageID = UUID.randomUUID().toString();
         messageTextForCaption = message;
         File imageFile = MediaLoader.getImageFile(
@@ -334,12 +346,11 @@ public class MainActivity extends Activity implements QMiscaGroupsListFragment.O
 
     @Override
     public void onOpenImageGalleryIntent(String caption) {
+        LocationProvider.getSharedLocationProvider().updateLocation(this);
         messageTextForCaption = caption;
-
         Intent intent = new Intent();
         intent.setType("image/*");
         intent.setAction(Intent.ACTION_GET_CONTENT);
-
         startActivityForResult(Intent.createChooser(intent, "Select Picture"), REQUEST_IMAGE_GALLERY);
     }
 
@@ -417,6 +428,7 @@ public class MainActivity extends Activity implements QMiscaGroupsListFragment.O
         if (fragment instanceof MessageListFragment) {
             MessageListFragment messageListFragment = (MessageListFragment) fragment;
             messageListFragment.loadNewMessage(newPictureMessage);
+            MiscaWorkflowManager.getManager().startNewImageWorkflow(newPictureMessage.getId(), this, messageListFragment);
         }
 
         JSONObject data = new JSONObject();
