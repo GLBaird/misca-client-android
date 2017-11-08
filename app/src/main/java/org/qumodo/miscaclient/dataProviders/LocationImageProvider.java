@@ -6,7 +6,6 @@ import android.location.Location;
 import android.util.Log;
 
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.nearby.messages.PublishCallback;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -14,12 +13,11 @@ import org.json.JSONObject;
 import org.qumodo.data.models.MiscaImage;
 import org.qumodo.network.QMessage;
 import org.qumodo.network.QMessageType;
-import org.qumodo.network.QTCPSocket;
 import org.qumodo.services.QTCPSocketService;
+import org.qumodo.miscaclient.dataProviders.ServerDetails.SocketCommands;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -49,7 +47,7 @@ public class LocationImageProvider {
         Log.d("LocationProvider", "Search with object: " + description);
         JSONObject data = new JSONObject();
         try {
-            data.put("command", "core_image_search");
+            data.put("command", SocketCommands.CORE_IMAGE_SEARCH);
             if (location != null) {
                 data.put("lat", location.getLatitude());
                 data.put("lon", location.getLongitude());

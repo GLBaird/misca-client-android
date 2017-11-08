@@ -4,12 +4,15 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.icu.text.StringSearch;
+import android.support.annotation.Nullable;
 import android.util.Log;
 import android.widget.Toast;
 
 import org.json.JSONException;
 import org.qumodo.data.models.EnrichmentData;
 import org.qumodo.data.models.Message;
+import org.qumodo.miscaclient.controllers.MiscaResponseController;
 import org.qumodo.miscaclient.dataProviders.DataEnrichmentProvider;
 import org.qumodo.miscaclient.dataProviders.LocationImageProvider;
 import org.qumodo.miscaclient.dataProviders.MessageContentProvider;
@@ -22,7 +25,12 @@ import org.qumodo.network.QMessageType;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
 
 public class MessageCenter {
 
@@ -71,16 +79,24 @@ public class MessageCenter {
     private void checkMessageContent(String message) {
         Log.d(TAG, "Message data received: " + message);
         QMessage parsed = parseMessage(message);
+
         if (parsed != null) {
+            boolean forThisUser = new HashSet<>(Arrays.asList(parsed.to))
+                                         .contains(UserSettingsManager.getUserID());
+
             if (parsed.type == QMessageType.AUTHENTICATION) {
                 getUserAuthenticationDetails(parsed);
             } else if (parsed.type == QMessageType.TEXT) {
                 parseTextMessage(parsed);
             } else if (parsed.type == QMessageType.PICTURE) {
                 parsePictureMessage(parsed);
-            } else if (parsed.type == QMessageType.MISCA_QUESTION || parsed.type == QMessageType.MISCA_RESPONSE) {
-                parseMiscaMessage(parsed);
-            } else if (parsed.type == QMessageType.COMMAND) {
+            } else if (parsed.type == QMessageType.MISCA_QUESTION && forThisUser) {
+                parseMiscaQuestion(parsed);
+            } else if (parsed.type == QMessageType.MISCA_RESPONSE && forThisUser) {
+                parseMiscaResponse(parsed);
+            } else if (parsed.type == QMessageType.MISCA_TEXT && forThisUser) {
+                parseTextMessage(parsed);
+            } else if (parsed.type == QMessageType.COMMAND && forThisUser) {
                 parseSystemCommand(parsed);
             } else if (parsed.type == QMessageType.ERROR) {
                 Log.d(TAG, "Error from socket: " + parsed);
@@ -161,8 +177,12 @@ public class MessageCenter {
         }
     }
 
-    private void parseMiscaMessage(QMessage message) {
+    private void parseMiscaQuestion(QMessage message) {
 
+    }
+
+    private void parseMiscaResponse(QMessage message) {
+        MiscaResponseController.getController().processResponse(message, appContext);
     }
 
     private void parseSystemCommand(QMessage message) {
@@ -208,6 +228,7 @@ public class MessageCenter {
         }
     }
 
+    @Nullable
     private QMessage parseMessage(String message) {
         try {
             return QMessage.make(message);

@@ -56,20 +56,20 @@ public class EnrichmentData {
         JSONObject exifData = null;
         try {
             exifData = data.getJSONObject("enriched_data").getJSONObject("exif");
+            Iterator<String> keys = exifData.keys();
+
+            while (keys.hasNext()) {
+                try {
+                    String key = keys.next();
+                    String value = exifData.getString(key);
+                    parsedExif.put(key, value);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
         } catch (JSONException e) {
             e.printStackTrace();
             return parsedExif;
-        }
-        Iterator<String> keys = exifData.keys();
-
-        while (keys.hasNext()) {
-            try {
-                String key = keys.next();
-                String value = exifData.getString(key);
-                parsedExif.put(key, value);
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
         }
 
         return parsedExif;
@@ -80,7 +80,7 @@ public class EnrichmentData {
         try {
             String id = json.getString("id");
             JSONObject body = json.getJSONObject("body");
-            String classification = body.getString("classifiers");
+            String classification = body.has("classifiers") ? body.getString("classifiers") : null;
             LatLng location = LocationProvider
                                 .getSharedLocationProvider()
                                 .getCurrentLocation();

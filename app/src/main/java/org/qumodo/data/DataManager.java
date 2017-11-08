@@ -300,7 +300,7 @@ public class DataManager {
 
             SQLiteDatabase db = helper.getWritableDatabase();
             db.update(Messages.MessagesEntry.TABLE_NAME, cv, Messages.MessagesEntry._ID + " = ?", new String[]{id});
-
+            db.close();
             return addNewMessage(response, QMessageType.TEXT, groupID, null, null, null);
         } catch (JSONException e) {
             e.printStackTrace();
@@ -313,6 +313,7 @@ public class DataManager {
     public void removeMiscaQuestion(String id) {
         SQLiteDatabase db = helper.getWritableDatabase();
         db.delete(Messages.MessagesEntry.TABLE_NAME, Messages.MessagesEntry._ID + " = ?", new String[]{id});
+        db.close();
     }
 
     public void setMessageError(String messageID, boolean error) {
@@ -320,6 +321,7 @@ public class DataManager {
         ContentValues cv = new ContentValues(1);
         cv.put(Messages.MessagesEntry.COLUMN_NAME_SEND_ERROR, error);
         db.update(Messages.MessagesEntry.TABLE_NAME, cv, Messages.MessagesEntry._ID + " = ?", new String[]{messageID});
+        db.close();
     }
 
 }

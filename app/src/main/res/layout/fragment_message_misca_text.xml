@@ -16,14 +16,14 @@
         android:paddingStart="7dp"
         android:paddingEnd="7dp"
         android:paddingTop="3dp"
-        android:src="@drawable/misca_icon_line" />
+        android:src="@drawable/misca_icon_line"
+        android:layout_marginEnd="@dimen/list_margin"/>
 
     <TextView
         android:id="@+id/message_list_item_text"
         style="@style/QMessageText"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/list_margin"
         android:layout_weight="3"
         android:gravity="start"
         android:text="Would you like me to run a search on the image?"

@@ -1,10 +1,12 @@
-package org.qumodo.miscaclient.dataProviders;
+package org.qumodo.miscaclient.controllers;
 
 import android.content.Context;
 
 import org.qumodo.data.DataManager;
 import org.qumodo.data.models.Message;
 import org.qumodo.data.models.MiscaWorkflowStep;
+import org.qumodo.miscaclient.dataProviders.MessageContentProvider;
+import org.qumodo.miscaclient.dataProviders.UserSettingsManager;
 import org.qumodo.miscaclient.fragments.MessageListFragment;
 import org.qumodo.network.QMessageType;
 
@@ -37,8 +39,16 @@ public class MiscaWorkflowManager {
     public void startNewImageWorkflow(String id, Context context, MessageListFragment messageListFragment) {
         String groupID = MessageContentProvider.getGroupID();
         DataManager dm = new DataManager(context);
-        Message newMessage = dm.addNewMessage(MiscaWorkflowGenerator.getStartID()+"::"+id, QMessageType.MISCA_QUESTION, groupID, UUID.randomUUID().toString(), UserSettingsManager.getMiscaID(), new Date());
+        Message newMessage = dm.addNewMessage(MiscaWorkflowGenerator.getStartID()+"::"+id, QMessageType.MISCA_QUESTION, groupID, null, UserSettingsManager.getMiscaID(), null);
         messageListFragment.loadNewMessage(newMessage);
+    }
+
+    public void addWorkflowStep(String id, MiscaWorkflowStep step) {
+        workflow.put(id, step);
+    }
+
+    public void removeWorkflowStep(String id) {
+        workflow.remove(id);
     }
 
 }

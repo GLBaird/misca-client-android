@@ -29,7 +29,9 @@
         android:layout_height="wrap_content"
         android:layout_weight="3"
         android:gravity="right"
-        android:text="Message from the user."/>
+        android:paddingEnd="10dp"
+        android:paddingStart="10dp"
+        android:text="Message from the user"/>
 
     <View
         android:id="@+id/callout"

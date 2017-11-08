@@ -3,6 +3,8 @@ package org.qumodo.miscaclient.fragments;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
+import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -18,21 +20,32 @@ import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.DataSource;
+import com.bumptech.glide.load.engine.GlideException;
+import com.bumptech.glide.request.RequestListener;
+import com.bumptech.glide.request.target.Target;
+
 import org.qumodo.data.DataManager;
 import org.qumodo.data.MediaLoader;
 import org.qumodo.data.MediaLoaderListener;
 import org.qumodo.data.MessageCenter;
+import org.qumodo.data.models.MiscaWorkflowCommand;
+import org.qumodo.data.models.MiscaWorkflowImage;
+import org.qumodo.data.models.MiscaWorkflowMessage;
 import org.qumodo.data.models.MiscaWorkflowQuestion;
+import org.qumodo.data.models.MiscaWorkflowStep;
 import org.qumodo.miscaclient.R;
+import org.qumodo.miscaclient.controllers.MiscaCommandRunner;
 import org.qumodo.miscaclient.dataProviders.MessageContentProvider;
-import org.qumodo.miscaclient.dataProviders.MiscaWorkflowGenerator;
-import org.qumodo.miscaclient.dataProviders.MiscaWorkflowManager;
+import org.qumodo.miscaclient.controllers.MiscaWorkflowGenerator;
+import org.qumodo.miscaclient.controllers.MiscaWorkflowManager;
+import org.qumodo.miscaclient.dataProviders.ServerDetails;
 import org.qumodo.miscaclient.dataProviders.UserSettingsManager;
 import org.qumodo.data.models.Message;
 import org.qumodo.network.QMessage;
 import org.qumodo.network.QMessageType;
 
-import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 
@@ -47,8 +60,11 @@ public class MessageRecyclerViewAdapter extends RecyclerView.Adapter<MessageRecy
     @Override
     public void onClick(View view) {
         Log.d("BINDER", "Button Clicked " + view.getTag());
-        String workflowID = ((String) view.getTag()).split("::")[0];
-        String imageID = ((String) view.getTag()).split("::")[1];
+        String[] tagItems = ((String) view.getTag()).split("::");
+        String workflowID = tagItems[0];
+        String imageID = tagItems[1];
+        String extra = tagItems.length > 2 ? "::" + tagItems[2] : "";
+
         Button button = (Button) view;
         DataManager dm = new DataManager(view.getContext());
         Intent updateUI = new Intent();
@@ -58,16 +74,52 @@ public class MessageRecyclerViewAdapter extends RecyclerView.Adapter<MessageRecy
             MessageContentProvider.setup(view.getContext(), currentGroupID);
             updateUI.setAction(MessageCenter.REMOVE_LAST_ITEM);
         } else {
-            Message response = dm.updateMiscaQuestionToAnswered(currentMiscaQuestionID, currentGroupID, currentMessageTextForMiscaQuestion, String.valueOf(button.getText()));
+            MiscaWorkflowQuestion messageText = (MiscaWorkflowQuestion) MiscaWorkflowManager.getManager().getStep(currentWorkflowID);
+            Message response = dm.updateMiscaQuestionToAnswered(currentMiscaQuestionID, currentGroupID, messageText.getMessage(), String.valueOf(button.getText()));
             Message toUpdate = MessageContentProvider.ITEM_MAP.get(currentMiscaQuestionID);
             toUpdate.setType(QMessageType.MISCA_TEXT);
-            toUpdate.setText(currentMessageTextForMiscaQuestion);
+            toUpdate.setText(messageText.getMessage());
             MessageContentProvider.addItem(response);
             updateUI.setAction(MessageCenter.NEW_LIST_ITEM);
+
+            if (!workflowID.equals("END")) {
+                nextWorkflowStep(workflowID, imageID+extra, view.getContext(), dm);
+            }
         }
 
         updateUI.putExtra(QMessage.KEY_GROUP_ID, currentGroupID);
         view.getContext().sendBroadcast(updateUI);
+    }
+
+    private void nextWorkflowStep(String workflowID, String imageID, Context context, DataManager dm) {
+        MiscaWorkflowStep nextStep = MiscaWorkflowManager.getManager().getStep(workflowID);
+        switch (nextStep.getType()) {
+            case QUESTION:
+                MiscaWorkflowQuestion question = (MiscaWorkflowQuestion) nextStep;
+                Message questionMessage = dm.addNewMessage(
+                        workflowID + "::" + imageID,
+                        QMessageType.MISCA_QUESTION,
+                        currentGroupID,
+                        null,
+                        UserSettingsManager.getMiscaID(),
+                        null
+                );
+                MessageContentProvider.addItem(questionMessage);
+                Intent updateUI = new Intent();
+                updateUI.setAction(MessageCenter.NEW_LIST_ITEM);
+                context.sendBroadcast(updateUI);
+                break;
+            case MESSAGE:
+                MiscaWorkflowMessage message = (MiscaWorkflowMessage) nextStep;
+                break;
+            case COMMAND:
+                MiscaWorkflowCommand command = (MiscaWorkflowCommand) nextStep;
+                MiscaCommandRunner.runCommand(command.getCommand(), imageID, currentGroupID, context, dm);
+                break;
+            case IMAGE:
+                MiscaWorkflowImage image = (MiscaWorkflowImage) nextStep;
+                break;
+        }
     }
 
     private static class MessageViewTypes {
@@ -179,6 +231,44 @@ public class MessageRecyclerViewAdapter extends RecyclerView.Adapter<MessageRecy
         });
     }
 
+    private void bindMiscaImageMessage(final ViewHolder holder) {
+        loading = true;
+        String imagePath = holder.mItem.getText();
+        Log.d("HOLDER", "Image Path " + imagePath);
+        holder.spinner.setVisibility(View.VISIBLE);
+        holder.imageView.setVisibility(View.INVISIBLE);
+        Glide.with(holder.mView.getContext())
+                .load(ServerDetails.getMiscaImageHostName(imagePath))
+                .listener(new RequestListener<Drawable>() {
+                    @Override
+                    public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
+                        Log.d("HOLDER", "Failed");
+                        loading = false;
+                        holder.spinner.setVisibility(View.GONE);
+                        holder.imageView.setImageResource(R.drawable.sample_image);
+                        return false;
+                    }
+
+                    @Override
+                    public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) {
+                        Log.d("HOLDER", "LOADED");
+                        loading = false;
+                        holder.spinner.setVisibility(View.GONE);
+                        holder.imageView.setVisibility(View.VISIBLE);
+                        holder.imageView.getLayoutParams().height = RecyclerView.LayoutParams.WRAP_CONTENT;
+                        int index = mValues.indexOf(holder.mItem);
+                        if (index >= mValues.size() - 2) {
+                            Intent updateUI = new Intent();
+                            updateUI.setAction(MessageListFragment.ACTION_LAST_IMAGE_LOADED);
+                            updateUI.putExtra(MessageListFragment.INTENT_LIST_ITEM_LOADED, index);
+                            holder.imageView.getContext().sendBroadcast(updateUI);
+                        }
+                        return false;
+                    }
+                })
+                .into(holder.imageView);
+    }
+
     private LinearLayout.LayoutParams getQuestionLayoutParams(Context context) {
         DisplayMetrics metrics = context.getResources().getDisplayMetrics();
         float height = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 35, metrics);
@@ -205,20 +295,19 @@ public class MessageRecyclerViewAdapter extends RecyclerView.Adapter<MessageRecy
 
     private String currentMiscaQuestionID;
     private String currentGroupID;
-    private String currentMessageTextForMiscaQuestion;
     private String currentWorkflowID;
 
     private void bindMiscaQuestionMessage(final ViewHolder holder) {
         currentMiscaQuestionID = holder.mItem.getId();
         currentGroupID = holder.mItem.getGroup().getId();
-
+        Log.d("BINDER", "MessageTXT " + holder.mItem.getText());
         String workflowID = holder.mItem.getText().split("::")[0];
         String imageID = holder.mItem.getText().split("::")[1];
+        Log.d("BINDER", "ImageID " + imageID);
         MiscaWorkflowQuestion question = (MiscaWorkflowQuestion) MiscaWorkflowManager
                                                                     .getManager()
                                                                     .getStep(workflowID);
         holder.messageText.setText(question.getMessage());
-        currentMessageTextForMiscaQuestion = question.getMessage();
         currentWorkflowID = workflowID;
 
         holder.questionList.removeAllViews();
@@ -236,12 +325,15 @@ public class MessageRecyclerViewAdapter extends RecyclerView.Adapter<MessageRecy
         if (holder.messageTime != null) {
             holder.messageTime.setText(holder.mItem.getSentAsTime());
         }
-        if (holder.mItem.getType() == QMessageType.TEXT) {
+        if (holder.mItem.getType() == QMessageType.TEXT
+                || holder.mItem.getType() == QMessageType.MISCA_TEXT) {
             bindTextMessageView(holder);
         } else if (holder.mItem.getType() == QMessageType.PICTURE) {
             bindPictureMessage(holder);
         } else if (holder.mItem.getType() == QMessageType.MISCA_QUESTION) {
             bindMiscaQuestionMessage(holder);
+        } else if (holder.mItem.getType() == QMessageType.MISCA_PHOTO) {
+            bindMiscaImageMessage(holder);
         }
 
         Animation animation = AnimationUtils.loadAnimation(

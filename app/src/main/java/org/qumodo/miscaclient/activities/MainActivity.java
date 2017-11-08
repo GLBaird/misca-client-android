@@ -49,7 +49,7 @@ import org.qumodo.miscaclient.QMiscaClientApplication;
 import org.qumodo.miscaclient.R;
 import org.qumodo.miscaclient.dataProviders.LocationProvider;
 import org.qumodo.miscaclient.dataProviders.MessageContentProvider;
-import org.qumodo.miscaclient.dataProviders.MiscaWorkflowManager;
+import org.qumodo.miscaclient.controllers.MiscaWorkflowManager;
 import org.qumodo.miscaclient.dataProviders.ServerDetails;
 import org.qumodo.miscaclient.dataProviders.UserSettingsManager;
 import org.qumodo.miscaclient.fragments.MessageListFragment;

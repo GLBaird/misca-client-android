@@ -16,6 +16,11 @@ public class ServerDetails {
     private static final String MEDIA_SERVER_HOSTNAME = "org.miscaclient.ServerDetails.MediaServerHostKey";
     private static final String SOCKET_PORT_NUMBER = "org.miscaclient.ServerDetails.SocketPortNumber";
 
+    public static class SocketCommands {
+        public static final String CORE_IMAGE_SEARCH = "core_image_search";
+        public static final String MISCA_OBJECT_SEARCH = "misca_object_search";
+    }
+
     public static void showHostNameDialoge(Context context) {
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         LayoutInflater inflater = LayoutInflater.from(context);
@@ -79,6 +84,11 @@ public class ServerDetails {
 
     public static String getMediaServerHostName() {
         return UserSettingsManager.getValue(MEDIA_SERVER_HOSTNAME, "http://192.168.0.104");
+    }
+
+    public static String getMiscaImageHostName(String image) {
+        return UserSettingsManager.getValue(MEDIA_SERVER_HOSTNAME, "http://192.168.0.104")
+                + ":9800/misca_image/"+image;
     }
 
 

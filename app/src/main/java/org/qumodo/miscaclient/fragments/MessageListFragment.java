@@ -62,6 +62,7 @@ public class MessageListFragment extends Fragment implements View.OnClickListene
                     }
                     break;
                 case MessageCenter.NEW_LIST_ITEM:
+                    adapter.notifyItemRangeRemoved(messageCount - 1, 1);
                     adapter.notifyItemInserted(messageCount - 1);
                     recyclerView.scrollToPosition(messageCount - 1);
                     break;
