@@ -2,6 +2,7 @@ package org.qumodo.miscaclient.controllers;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Rect;
 import android.os.CountDownTimer;
 import android.text.TextUtils;
 import android.util.Log;
@@ -14,18 +15,15 @@ import org.qumodo.data.MessageCenter;
 import org.qumodo.data.models.EnrichmentData;
 import org.qumodo.data.models.Message;
 import org.qumodo.data.models.MiscaWorkflowCommand.MiscaWorkflowCommands;
-import org.qumodo.data.models.MiscaWorkflowQuestion;
 import org.qumodo.miscaclient.dataProviders.DataEnrichmentProvider;
 import org.qumodo.miscaclient.dataProviders.MessageContentProvider;
+import org.qumodo.miscaclient.dataProviders.ServerDetails.SocketCommands;
 import org.qumodo.miscaclient.dataProviders.UserSettingsManager;
 import org.qumodo.network.QMessage;
 import org.qumodo.network.QMessageType;
-import org.qumodo.miscaclient.dataProviders.ServerDetails.SocketCommands;
 import org.qumodo.services.QTCPSocketService;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 
 
@@ -88,10 +86,8 @@ public class MiscaCommandRunner {
     private void runObjectDetection() {
         EnrichmentData data = DataEnrichmentProvider.getProvider().getDataWithID(imageID);
         if (data != null) {
-            Log.d("COMMAND", "DATA FOUND");
             processObjectDetectionData(data);
         } else {
-            Log.d("COMMAND", "NOT FOUND");
             addMiscaTextMessage("Object recognition is being performed on the image above.");
 
             final CountDownTimer timer = new CountDownTimer(6000, 6000) {
@@ -121,7 +117,7 @@ public class MiscaCommandRunner {
             getObjectInformation(data.getClassification());
         } else {
             addMiscaTextMessage("No object was detected in the photo. " +
-                    "Please try again with a different photo");
+                    "Please try again with a different picture");
         }
     }
 
@@ -155,7 +151,6 @@ public class MiscaCommandRunner {
         if (data != null) {
             processANPRData(data);
         } else {
-            Log.d("COMMAND", "NOT FOUND");
             addMiscaTextMessage("ANPR is being performed on the image above.");
 
             final CountDownTimer timer = new CountDownTimer(6000, 6000) {
@@ -211,12 +206,51 @@ public class MiscaCommandRunner {
             }
         } else {
             addMiscaTextMessage("No ANPR was detected in the photo. " +
-                    "Please try again with a different photo");
+                    "Please try again with a different picture");
         }
     }
 
     private void runFaceDetection() {
-        Toast.makeText(context, "Face", Toast.LENGTH_SHORT).show();
+        EnrichmentData data = DataEnrichmentProvider.getProvider().getDataWithID(imageID);
+        if (data != null) {
+            processFaceDetection(data);
+        } else {
+            addMiscaTextMessage("Face detection is being performed on the image above.");
+
+            final CountDownTimer timer = new CountDownTimer(6000, 6000) {
+                @Override
+                public void onTick(long l) { }
+
+                @Override
+                public void onFinish() {
+                    addMiscaTextMessage("No response from server. " +
+                            "Probably something has gone wrong.");
+                }
+            };
+            timer.start();
+            DataEnrichmentProvider.getProvider().addListener(imageID,
+                    new DataEnrichmentProvider.DataEnrichmentListener() {
+                        @Override
+                        public void enrichmentDataReady(EnrichmentData data) {
+                            timer.cancel();
+                            processFaceDetection(data);
+                        }
+                    });
+        }
+    }
+
+    private void processFaceDetection(EnrichmentData data) {
+        Rect[] faces = data.getFaces();
+        if (faces != null && faces.length > 0) {
+            Message faceMessage = dm.addNewMessage(imageID, QMessageType.MISCA_FACES, groupID,
+                    null, UserSettingsManager.getMiscaID(), null);
+            addMiscaTextMessage("Found the following faces:");
+            MessageContentProvider.addItem(faceMessage);
+            updateListUI();
+        } else {
+            addMiscaTextMessage("No faces were detected in the photo. " +
+                    "Please try again with a different picture.");
+        }
     }
 
     private void updateListUI() {

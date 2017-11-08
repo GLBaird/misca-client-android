@@ -90,7 +90,7 @@ public class QMiscaGroupsListRecyclerViewAdapter extends RecyclerView.Adapter<QM
             loader.setVisibility(View.VISIBLE);
             MediaLoader.getUserCircularAvatar(mItem.lastMessageFromID, new MediaLoaderListener() {
                 @Override
-                public void imageHasLoaded(String ref, Bitmap image) {
+                public void imageHasLoaded(String ref, Bitmap image, double scale) {
                     if (ref.equals(mItem.lastMessageFromID)) {
                         loader.setVisibility(View.INVISIBLE);
                         iconView.setVisibility(View.VISIBLE);

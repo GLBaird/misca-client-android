@@ -1,6 +1,7 @@
 package org.qumodo.data.models;
 
 
+import android.graphics.Rect;
 import android.support.annotation.Nullable;
 
 import com.google.android.gms.maps.model.LatLng;
@@ -23,12 +24,12 @@ public class EnrichmentData {
     private String classification;
     private String captions;
     private LatLng location;
-    private Face[] faces;
+    private Rect[] faces;
     private String[] registrationPlates;
     private Map<String, String> exif;
 
     public EnrichmentData(String id, Map<String, String> exif, String classification,
-                          String captions, LatLng location, Face[] faces,
+                          String captions, LatLng location, Rect[] faces,
                           String[] registrationPlates) {
         this.id = id;
         this.exif = exif;
@@ -91,8 +92,20 @@ public class EnrichmentData {
                     parsedPlates.add(plates.getString(i));
                 }
             }
+
+            ArrayList<Rect> faces = new ArrayList<>();
+            if (body.has("faces")) {
+                JSONArray faceData = body.getJSONArray("faces");
+                for (int i = 0; i< faceData.length(); i++) {
+                    JSONObject f = (JSONObject) faceData.get(i);
+                    int x = f.getInt("x"), y = f.getInt("y"), w = f.getInt("w"), h = f.getInt("h");
+                    faces.add(new Rect(x, y, x + w, y + h));
+                }
+            }
+
             Map<String, String> exif = parseExifData(body);
-            return new EnrichmentData(id, exif, classification, null, location, null,
+            return new EnrichmentData(id, exif, classification, null, location,
+                    faces.toArray(new Rect[faces.size()]),
                     parsedPlates.toArray(new String[parsedPlates.size()]));
         } catch (JSONException e) {
             e.printStackTrace();
@@ -117,7 +130,7 @@ public class EnrichmentData {
         return location;
     }
 
-    public Face[] getFaces() {
+    public Rect[] getFaces() {
         return faces;
     }
 
@@ -140,6 +153,7 @@ public class EnrichmentData {
                 "Captions: " + (captions != null ? captions : "NULL") + "\n" +
                 "Location: " + location.toString() + "\n" +
                 "Anpr: " + Arrays.toString(registrationPlates) + "\n"+
+                "faces: " + Arrays.toString(faces) + "\n" +
                 "Exif: " + exif.toString() + "\n";
 
     }

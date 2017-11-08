@@ -3,6 +3,10 @@ package org.qumodo.miscaclient.fragments;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
@@ -30,6 +34,7 @@ import org.qumodo.data.DataManager;
 import org.qumodo.data.MediaLoader;
 import org.qumodo.data.MediaLoaderListener;
 import org.qumodo.data.MessageCenter;
+import org.qumodo.data.models.EnrichmentData;
 import org.qumodo.data.models.MiscaWorkflowCommand;
 import org.qumodo.data.models.MiscaWorkflowImage;
 import org.qumodo.data.models.MiscaWorkflowMessage;
@@ -37,6 +42,7 @@ import org.qumodo.data.models.MiscaWorkflowQuestion;
 import org.qumodo.data.models.MiscaWorkflowStep;
 import org.qumodo.miscaclient.R;
 import org.qumodo.miscaclient.controllers.MiscaCommandRunner;
+import org.qumodo.miscaclient.dataProviders.DataEnrichmentProvider;
 import org.qumodo.miscaclient.dataProviders.MessageContentProvider;
 import org.qumodo.miscaclient.controllers.MiscaWorkflowGenerator;
 import org.qumodo.miscaclient.controllers.MiscaWorkflowManager;
@@ -206,7 +212,7 @@ public class MessageRecyclerViewAdapter extends RecyclerView.Adapter<MessageRecy
         Log.d("MessageRecycleView", "Loading Message");
         MediaLoader.getMessageImage(holder.mItem.getId(), holder.mView.getContext(), new MediaLoaderListener() {
             @Override
-            public void imageHasLoaded(String ref, Bitmap image) {
+            public void imageHasLoaded(String ref, Bitmap image, double scale) {
                 Log.d("MessageRecycleView", "Image has loaded");
                 holder.imageView.setImageBitmap(image);
                 holder.imageView.setVisibility(View.VISIBLE);
@@ -317,6 +323,76 @@ public class MessageRecyclerViewAdapter extends RecyclerView.Adapter<MessageRecy
         }
     }
 
+    private Paint paint;
+
+    private Paint getPaint() {
+        if (paint == null) {
+            paint = new Paint();
+            paint.setStyle(Paint.Style.STROKE);
+            paint.setColor(Color.RED);
+            paint.setAntiAlias(true);
+            paint.setStrokeWidth(5);
+        }
+
+        return paint;
+    }
+
+    private void bindMiscaFaces(final ViewHolder holder) {
+        loading = true;
+        holder.imageView.setVisibility(View.INVISIBLE);
+        holder.spinner.setVisibility(View.VISIBLE);
+
+        MediaLoader.getMessageImage(holder.mItem.getText(), holder.mView.getContext(), new MediaLoaderListener() {
+            @Override
+            public void imageHasLoaded(String ref, Bitmap image, double scale) {
+                final EnrichmentData data = DataEnrichmentProvider.getProvider().getDataWithID(holder.mItem.getText());
+
+                if (data != null && data.getFaces() != null && data.getFaces().length > 0) {
+
+                    Canvas canvas = new Canvas(image);
+
+                    Paint p = getPaint();
+                    for (Rect face : data.getFaces()) {
+                        int l = (int) Math.round((double) face.left * scale);
+                        int t = (int) Math.round((double) face.top * scale);
+                        int r = (int) Math.round((double) face.right * scale);
+                        int b = (int) Math.round((double) face.bottom * scale);
+                        canvas.drawRect(new Rect(l, t, r, b), p);
+                    }
+
+                }
+
+                holder.imageView.setImageBitmap(image);
+                loading = false;
+
+
+
+                holder.imageView.setVisibility(View.VISIBLE);
+                holder.spinner.setVisibility(View.GONE);
+
+                holder.imageView.getLayoutParams().height = RecyclerView.LayoutParams.WRAP_CONTENT;
+                int index = mValues.indexOf(holder.mItem);
+                if (index >= mValues.size() - 2) {
+                    Intent updateUI = new Intent();
+                    updateUI.setAction(MessageListFragment.ACTION_LAST_IMAGE_LOADED);
+                    updateUI.putExtra(MessageListFragment.INTENT_LIST_ITEM_LOADED, index);
+                    holder.imageView.getContext().sendBroadcast(updateUI);
+                }
+
+            }
+
+            @Override
+            public void imageHasFailedToLoad(String ref) {
+                Log.d("BUNDLE", "FAILED!!!");
+
+                loading = false;
+                holder.spinner.setVisibility(View.GONE);
+                holder.imageView.setImageResource(R.drawable.sample_image);
+            }
+        });
+
+    }
+
     private int lastPosition = -1;
 
     @Override
@@ -334,6 +410,8 @@ public class MessageRecyclerViewAdapter extends RecyclerView.Adapter<MessageRecy
             bindMiscaQuestionMessage(holder);
         } else if (holder.mItem.getType() == QMessageType.MISCA_PHOTO) {
             bindMiscaImageMessage(holder);
+        } else if (holder.mItem.getType() == QMessageType.MISCA_FACES) {
+            bindMiscaFaces(holder);
         }
 
         Animation animation = AnimationUtils.loadAnimation(

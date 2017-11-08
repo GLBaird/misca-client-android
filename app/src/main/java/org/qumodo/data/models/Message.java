@@ -50,7 +50,8 @@ public class Message {
             if (parsed != null && (this.type == QMessageType.TEXT
                     || this.type == QMessageType.MISCA_QUESTION
                     || this.type == QMessageType.MISCA_TEXT
-                    || this.type == QMessageType.MISCA_PHOTO)) {
+                    || this.type == QMessageType.MISCA_PHOTO)
+                    || this.type == QMessageType.MISCA_FACES) {
                 this.text = parsed.getString("text");
             } else if (parsed != null && this.type == QMessageType.PICTURE) {
                 this.text = parsed.getString("caption");

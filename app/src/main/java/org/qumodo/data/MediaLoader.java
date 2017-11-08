@@ -84,6 +84,8 @@ public class MediaLoader {
         return output;
     }
 
+    private static double scale;
+
     public static void imageSearch(Uri imageURI) {
         UploadImageToServer task = new UploadImageToServer(appContext);
         task.imageURI = imageURI;
@@ -92,13 +94,13 @@ public class MediaLoader {
 
     public static void getUserAvatar(String userID, MediaLoaderListener listener) {
         Bitmap file = BitmapFactory.decodeResource(appContext.getResources(), R.drawable.face);
-        listener.imageHasLoaded(userID, file);
+        listener.imageHasLoaded(userID, file, scale);
     }
 
     public static void getUserCircularAvatar(String userID, MediaLoaderListener listener) {
         Bitmap file = BitmapFactory.decodeResource(appContext.getResources(), R.drawable.face);
         file = getCircularBitmap(file);
-        listener.imageHasLoaded(userID, file);
+        listener.imageHasLoaded(userID, file, scale);
     }
 
     public static Bitmap rotateBitmap(Bitmap source, float angle, boolean scaleImage)
@@ -108,6 +110,7 @@ public class MediaLoader {
         if (source.getWidth() > 1000 && scaleImage) {
             float scale = (float) 1000 / (float) source.getWidth();
             matrix.postScale(scale, scale);
+            MediaLoader.scale = scale;
             Log.d(TAG, "Scale "+scale+"  "+source.getWidth()+"  "+source.getHeight());
         }
         matrix.postRotate(angle);
@@ -345,7 +348,7 @@ public class MediaLoader {
         @Override
         protected void onPostExecute(Bitmap bitmap) {
             if (bitmap != null) {
-                listener.imageHasLoaded(messageID != null ?  messageID : imageID, bitmap);
+                listener.imageHasLoaded(messageID != null ?  messageID : imageID, bitmap, scale);
             } else {
                 listener.imageHasFailedToLoad(messageID);
             }

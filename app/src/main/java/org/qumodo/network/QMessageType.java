@@ -18,6 +18,7 @@ public enum QMessageType {
     AUTHENTICATION(14),
     MISCA_TEXT(15),
     MISCA_PHOTO(16),
+    MISCA_FACES(17),
     UNKNOWN(100);
 
     public int value;
@@ -58,6 +59,8 @@ public enum QMessageType {
                 return "misca text";
             case 16:
                 return "misca photo";
+            case 17:
+                return "misca faces";
             default:
                 return "unknown";
         }

@@ -87,6 +87,10 @@ public class ServerDetails {
         return UserSettingsManager.getValue(MEDIA_SERVER_HOSTNAME, "http://192.168.0.104");
     }
 
+    public static String getUserMessageImageHostName(String messageID) {
+        return getMediaServerHostName() + ":9800/message_image/"+messageID;
+    }
+
     public static String getMiscaImageHostName(String image) {
         return UserSettingsManager.getValue(MEDIA_SERVER_HOSTNAME, "http://192.168.0.104")
                 + ":9800/misca_image/"+image;
