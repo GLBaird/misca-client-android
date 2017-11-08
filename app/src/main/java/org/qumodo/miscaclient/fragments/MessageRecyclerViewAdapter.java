@@ -35,20 +35,18 @@ import org.qumodo.data.MediaLoader;
 import org.qumodo.data.MediaLoaderListener;
 import org.qumodo.data.MessageCenter;
 import org.qumodo.data.models.EnrichmentData;
+import org.qumodo.data.models.Message;
 import org.qumodo.data.models.MiscaWorkflowCommand;
-import org.qumodo.data.models.MiscaWorkflowImage;
-import org.qumodo.data.models.MiscaWorkflowMessage;
 import org.qumodo.data.models.MiscaWorkflowQuestion;
 import org.qumodo.data.models.MiscaWorkflowStep;
 import org.qumodo.miscaclient.R;
 import org.qumodo.miscaclient.controllers.MiscaCommandRunner;
-import org.qumodo.miscaclient.dataProviders.DataEnrichmentProvider;
-import org.qumodo.miscaclient.dataProviders.MessageContentProvider;
 import org.qumodo.miscaclient.controllers.MiscaWorkflowGenerator;
 import org.qumodo.miscaclient.controllers.MiscaWorkflowManager;
+import org.qumodo.miscaclient.dataProviders.DataEnrichmentProvider;
+import org.qumodo.miscaclient.dataProviders.MessageContentProvider;
 import org.qumodo.miscaclient.dataProviders.ServerDetails;
 import org.qumodo.miscaclient.dataProviders.UserSettingsManager;
-import org.qumodo.data.models.Message;
 import org.qumodo.network.QMessage;
 import org.qumodo.network.QMessageType;
 
@@ -101,7 +99,6 @@ public class MessageRecyclerViewAdapter extends RecyclerView.Adapter<MessageRecy
         MiscaWorkflowStep nextStep = MiscaWorkflowManager.getManager().getStep(workflowID);
         switch (nextStep.getType()) {
             case QUESTION:
-                MiscaWorkflowQuestion question = (MiscaWorkflowQuestion) nextStep;
                 Message questionMessage = dm.addNewMessage(
                         workflowID + "::" + imageID,
                         QMessageType.MISCA_QUESTION,
@@ -115,15 +112,9 @@ public class MessageRecyclerViewAdapter extends RecyclerView.Adapter<MessageRecy
                 updateUI.setAction(MessageCenter.NEW_LIST_ITEM);
                 context.sendBroadcast(updateUI);
                 break;
-            case MESSAGE:
-                MiscaWorkflowMessage message = (MiscaWorkflowMessage) nextStep;
-                break;
             case COMMAND:
                 MiscaWorkflowCommand command = (MiscaWorkflowCommand) nextStep;
                 MiscaCommandRunner.runCommand(command.getCommand(), imageID, currentGroupID, context, dm);
-                break;
-            case IMAGE:
-                MiscaWorkflowImage image = (MiscaWorkflowImage) nextStep;
                 break;
         }
     }
@@ -185,21 +176,23 @@ public class MessageRecyclerViewAdapter extends RecyclerView.Adapter<MessageRecy
     }
 
     private void bindTextMessageView(final ViewHolder holder) {
-        holder.messageText.setText(holder.mItem.getText());
-        if (holder.mItem.getText().length() < 30) {
-            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                    ViewGroup.LayoutParams.WRAP_CONTENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT
-            );
-            lp.weight = 0;
-            holder.messageText.setLayoutParams(lp);
-        } else {
-            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                    0,
-                    ViewGroup.LayoutParams.WRAP_CONTENT
-            );
-            lp.weight = 3;
-            holder.messageText.setLayoutParams(lp);
+        if (holder.messageText != null && holder.mItem != null) {
+            holder.messageText.setText(holder.mItem.getText());
+            if (holder.mItem.getText().length() < 30) {
+                LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                        ViewGroup.LayoutParams.WRAP_CONTENT,
+                        ViewGroup.LayoutParams.WRAP_CONTENT
+                );
+                lp.weight = 0;
+                holder.messageText.setLayoutParams(lp);
+            } else {
+                LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                        0,
+                        ViewGroup.LayoutParams.WRAP_CONTENT
+                );
+                lp.weight = 3;
+                holder.messageText.setLayoutParams(lp);
+            }
         }
     }
 
@@ -210,31 +203,38 @@ public class MessageRecyclerViewAdapter extends RecyclerView.Adapter<MessageRecy
         holder.imageView.setVisibility(View.INVISIBLE);
         holder.spinner.setVisibility(View.VISIBLE);
         Log.d("MessageRecycleView", "Loading Message");
-        MediaLoader.getMessageImage(holder.mItem.getId(), holder.mView.getContext(), new MediaLoaderListener() {
-            @Override
-            public void imageHasLoaded(String ref, Bitmap image, double scale) {
-                Log.d("MessageRecycleView", "Image has loaded");
-                holder.imageView.setImageBitmap(image);
-                holder.imageView.setVisibility(View.VISIBLE);
-                holder.spinner.setVisibility(View.GONE);
-                loading = false;
-                holder.imageView.getLayoutParams().height = RecyclerView.LayoutParams.WRAP_CONTENT;
-                int index = mValues.indexOf(holder.mItem);
-                if (index >= mValues.size() - 2) {
-                    Intent updateUI = new Intent();
-                    updateUI.setAction(MessageListFragment.ACTION_LAST_IMAGE_LOADED);
-                    updateUI.putExtra(MessageListFragment.INTENT_LIST_ITEM_LOADED, index);
-                    holder.imageView.getContext().sendBroadcast(updateUI);
-                }
-            }
+        Glide.with(holder.mView.getContext())
+                .asBitmap()
+                .load(ServerDetails.getUserMessageImageHostName(holder.mItem.getId()))
+                .thumbnail(0.1f)
+                .listener(new RequestListener<Bitmap>() {
+                    @Override
+                    public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Bitmap> target, boolean isFirstResource) {
+                        Log.d("BINDER", "load failed");
+                        holder.imageView.setImageResource(R.drawable.sample_image);
+                        loading = false;
+                        return false;
+                    }
 
-            @Override
-            public void imageHasFailedToLoad(String ref) {
-                Log.d("BINDER", "load failed");
-                holder.imageView.setImageResource(R.drawable.sample_image);
-                loading = false;
-            }
-        });
+                    @Override
+                    public boolean onResourceReady(Bitmap resource, Object model, Target<Bitmap> target, DataSource dataSource, boolean isFirstResource) {
+                        Log.d("MessageRecycleView", "Image has loaded");
+                        holder.imageView.setImageBitmap(resource);
+                        holder.imageView.setVisibility(View.VISIBLE);
+                        holder.spinner.setVisibility(View.GONE);
+                        loading = false;
+                        holder.imageView.getLayoutParams().height = RecyclerView.LayoutParams.WRAP_CONTENT;
+                        int index = mValues.indexOf(holder.mItem);
+                        if (index >= mValues.size() - 2) {
+                            Intent updateUI = new Intent();
+                            updateUI.setAction(MessageListFragment.ACTION_LAST_IMAGE_LOADED);
+                            updateUI.putExtra(MessageListFragment.INTENT_LIST_ITEM_LOADED, index);
+                            holder.imageView.getContext().sendBroadcast(updateUI);
+                        }
+                        return false;
+                    }
+                })
+                .into(holder.imageView);
     }
 
     private void bindMiscaImageMessage(final ViewHolder holder) {

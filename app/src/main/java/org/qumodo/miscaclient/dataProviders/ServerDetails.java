@@ -96,5 +96,4 @@ public class ServerDetails {
                 + ":9800/misca_image/"+image;
     }
 
-
 }
