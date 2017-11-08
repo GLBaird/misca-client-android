@@ -41,19 +41,25 @@ public class MiscaResponseController {
 
     private Question[] getQuestions(String command, JSONArray items) {
         try {
+            List<Question> questions = new ArrayList<>(items.length());
+
             if (command.equals(SocketCommands.MISCA_OBJECT_SEARCH)) {
-                List<Question> questions = new ArrayList<>(items.length());
                 for (int i = 0; i < items.length(); i++) {
                     JSONObject item = (JSONObject) items.get(i);
                     String object = item.getString("object");
                     Question q = new Question(object, "response_question::"+i);
                     questions.add(q);
                 }
-
-                questions.add(new Question("Cancel", "END"));
-
-                return questions.toArray(new Question[questions.size()]);
+            } else if (command.equals(SocketCommands.MISCA_ANPR_SEARCH)) {
+                for (int i = 0; i < items.length(); i++) {
+                    JSONObject item = (JSONObject) items.get(i);
+                    String object = item.getString("plate");
+                    Question q = new Question(object, "response_question::"+i);
+                    questions.add(q);
+                }
             }
+            questions.add(new Question("Cancel", "END"));
+            return questions.toArray(new Question[questions.size()]);
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -144,6 +150,15 @@ public class MiscaResponseController {
                 e.printStackTrace();
                 return "Error, failed to extract object data from response";
             }
+        } else if (command.equals(SocketCommands.MISCA_ANPR_SEARCH)) {
+            try {
+                String plate = data.getString("plate");
+                String description = data.getString("details");
+                return "Information for plate " + plate + ":\n" + description;
+            } catch (JSONException e) {
+                e.printStackTrace();
+                return "Error, failed to extract object data from response";
+            }
         }
 
         return "Error, unknown command";
@@ -153,6 +168,8 @@ public class MiscaResponseController {
         switch (command) {
             case SocketCommands.MISCA_OBJECT_SEARCH:
                 return "Here are the objects found in the image, click on the one you wish to lookup:";
+            case SocketCommands.MISCA_ANPR_SEARCH:
+                return "Here are the plates found on the system, click on the one you wish to view:";
         }
 
         return "Error, unknown command";

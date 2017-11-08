@@ -25,7 +25,7 @@ public class MiscaWorkflowGenerator {
         }));
 
         workflow.put("start_search", new MiscaWorkflowQuestion(
-                "start_search", "Would you like to search\u00A0for\u00A0a:", new Question[]{
+                "start_search", "Would you like to search\u00A0for:", new Question[]{
                     new Question("Face", "face_detect_start"),
                     new Question("Object", "crop_image_question"),
                     new Question("Number plate?", "anpr_start")

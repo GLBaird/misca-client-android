@@ -3,6 +3,7 @@ package org.qumodo.miscaclient.controllers;
 import android.content.Context;
 import android.content.Intent;
 import android.os.CountDownTimer;
+import android.text.TextUtils;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -13,6 +14,7 @@ import org.qumodo.data.MessageCenter;
 import org.qumodo.data.models.EnrichmentData;
 import org.qumodo.data.models.Message;
 import org.qumodo.data.models.MiscaWorkflowCommand.MiscaWorkflowCommands;
+import org.qumodo.data.models.MiscaWorkflowQuestion;
 import org.qumodo.miscaclient.dataProviders.DataEnrichmentProvider;
 import org.qumodo.miscaclient.dataProviders.MessageContentProvider;
 import org.qumodo.miscaclient.dataProviders.UserSettingsManager;
@@ -20,6 +22,12 @@ import org.qumodo.network.QMessage;
 import org.qumodo.network.QMessageType;
 import org.qumodo.miscaclient.dataProviders.ServerDetails.SocketCommands;
 import org.qumodo.services.QTCPSocketService;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+
 
 
 public class MiscaCommandRunner {
@@ -143,7 +151,68 @@ public class MiscaCommandRunner {
     }
 
     private void runNumberPlateDetection() {
-        Toast.makeText(context, "Number Plate", Toast.LENGTH_SHORT).show();
+        EnrichmentData data = DataEnrichmentProvider.getProvider().getDataWithID(imageID);
+        if (data != null) {
+            processANPRData(data);
+        } else {
+            Log.d("COMMAND", "NOT FOUND");
+            addMiscaTextMessage("ANPR is being performed on the image above.");
+
+            final CountDownTimer timer = new CountDownTimer(6000, 6000) {
+                @Override
+                public void onTick(long l) { }
+
+                @Override
+                public void onFinish() {
+                    addMiscaTextMessage("No response from server. " +
+                            "Probably something has gone wrong.");
+                }
+            };
+            timer.start();
+            DataEnrichmentProvider.getProvider().addListener(imageID,
+                    new DataEnrichmentProvider.DataEnrichmentListener() {
+                        @Override
+                        public void enrichmentDataReady(EnrichmentData data) {
+                            timer.cancel();
+                            processANPRData(data);
+                        }
+                    });
+        }
+    }
+
+    private void processANPRData(EnrichmentData enriched) {
+        String[] plates = enriched.getANPR();
+        if (plates != null && plates.length >= 1) {
+            String search = TextUtils.join(" ", plates);
+            List<String> found = new ArrayList<>(plates.length);
+            for (String plate : plates) {
+                found.add(plate.split(" ")[0]);
+            }
+            addMiscaTextMessage("Number plates found: " + TextUtils.join(", ", found) + ",\nsearching database...");
+            try {
+                JSONObject data = new JSONObject();
+                data.put("command", SocketCommands.MISCA_ANPR_SEARCH);
+                data.put("anpr", search);
+                data.put("groupID", groupID);
+                QMessage message = new QMessage(
+                        UserSettingsManager.getMiscaID(),
+                        UserSettingsManager.getUserID(),
+                        QMessageType.COMMAND,
+                        data
+                );
+
+                Intent sendMessage = new Intent();
+                sendMessage.setAction(QTCPSocketService.ACTION_SEND_MESSAGE);
+                sendMessage.putExtra(QTCPSocketService.INTENT_KEY_MESSAGE, message.serialize());
+                context.sendBroadcast(sendMessage);
+
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        } else {
+            addMiscaTextMessage("No ANPR was detected in the photo. " +
+                    "Please try again with a different photo");
+        }
     }
 
     private void runFaceDetection() {
