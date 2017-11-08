@@ -22,6 +22,16 @@ public class QMiscaClientApplication extends Application {
 
     private static final String TAG = "QMiscaClientApplication";
 
+    private static QMiscaClientApplication current;
+
+    public static Context getContext() {
+        if (current != null) {
+            return current.getApplicationContext();
+        }
+
+        return null;
+    }
+
     private static int port;
     private static String hostname;
     public static final String APPLICATION_TEAR_SOCKET_DOWN = "org.qumodo.misca.QMiscaClientApplication.TEAR_DOWN_SOCKET";
@@ -93,6 +103,9 @@ public class QMiscaClientApplication extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+
+        QMiscaClientApplication.current = this;
+
         IntentFilter filter = new IntentFilter();
         filter.addAction(QTCPSocketService.DELEGATE_SOCKET_CONNECTION);
         filter.addAction(QTCPSocketService.DELEGATE_SOCKET_CLOSED);

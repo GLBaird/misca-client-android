@@ -5,6 +5,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
+import org.qumodo.data.contracts.Enrichments;
 import org.qumodo.data.contracts.Groups;
 import org.qumodo.data.contracts.Messages;
 import org.qumodo.data.contracts.Users;
@@ -26,6 +27,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.execSQL(Users.SQL_CREATE_ENTRIES);
         db.execSQL(Groups.SQL_CREATE_ENTRIES);
         db.execSQL(Messages.SQL_CREATE_ENTRIES);
+        db.execSQL(Enrichments.SQL_CREATE_ENTRIES);
     }
 
     private void runRawQuery(String query, SQLiteDatabase db) {
@@ -45,6 +47,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.execSQL(Messages.SQL_DELETE_ENTRIES);
         db.execSQL(Groups.SQL_DELETE_ENTRIES);
         db.execSQL(Users.SQL_DELETE_ENTRIES);
+        db.execSQL(Enrichments.SQL_DELETE_ENTRIES);
     }
 
     @Override

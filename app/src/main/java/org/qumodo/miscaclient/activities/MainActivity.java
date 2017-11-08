@@ -484,6 +484,8 @@ public class MainActivity extends Activity implements QMiscaGroupsListFragment.O
 
         String userID = UserSettingsManager.getUserID();
 
+        Log.d(TAG, "Startig wit "+userID);
+
         for (int i = 0; i < menu.size(); i++) {
            if (menu.getItem(i).getItemId() == R.id.action_user_a)
             item1 = menu.getItem(i);
@@ -506,6 +508,7 @@ public class MainActivity extends Activity implements QMiscaGroupsListFragment.O
     }
 
     private boolean setMenuForID(int id) {
+        Log.d("MENU", "SET FOR "+id+" with "+R.id.action_user_a);
         switch (id) {
             case android.R.id.home:
                 getFragmentManager().popBackStack();

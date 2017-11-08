@@ -321,7 +321,6 @@ public class DataManager {
         ContentValues cv = new ContentValues(1);
         cv.put(Messages.MessagesEntry.COLUMN_NAME_SEND_ERROR, error);
         db.update(Messages.MessagesEntry.TABLE_NAME, cv, Messages.MessagesEntry._ID + " = ?", new String[]{messageID});
-        db.close();
     }
 
 }
