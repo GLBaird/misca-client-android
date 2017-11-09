@@ -203,38 +203,32 @@ public class MessageRecyclerViewAdapter extends RecyclerView.Adapter<MessageRecy
         holder.imageView.setVisibility(View.INVISIBLE);
         holder.spinner.setVisibility(View.VISIBLE);
         Log.d("MessageRecycleView", "Loading Message");
-        Glide.with(holder.mView.getContext())
-                .asBitmap()
-                .load(ServerDetails.getUserMessageImageHostName(holder.mItem.getId()))
-                .thumbnail(0.1f)
-                .listener(new RequestListener<Bitmap>() {
-                    @Override
-                    public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Bitmap> target, boolean isFirstResource) {
-                        Log.d("BINDER", "load failed");
-                        holder.imageView.setImageResource(R.drawable.sample_image);
-                        loading = false;
-                        return false;
-                    }
+        MediaLoader.getMessageImage(holder.mItem.getId(), holder.mView.getContext(), new MediaLoaderListener() {
+            @Override
+            public void imageHasLoaded(String ref, Bitmap image, double scale) {
+                Log.d("MessageRecycleView", "Image has loaded");
+                holder.imageView.setImageBitmap(image);
+                holder.imageView.setVisibility(View.VISIBLE);
+                holder.spinner.setVisibility(View.GONE);
 
-                    @Override
-                    public boolean onResourceReady(Bitmap resource, Object model, Target<Bitmap> target, DataSource dataSource, boolean isFirstResource) {
-                        Log.d("MessageRecycleView", "Image has loaded");
-                        holder.imageView.setImageBitmap(resource);
-                        holder.imageView.setVisibility(View.VISIBLE);
-                        holder.spinner.setVisibility(View.GONE);
-                        loading = false;
-                        holder.imageView.getLayoutParams().height = RecyclerView.LayoutParams.WRAP_CONTENT;
-                        int index = mValues.indexOf(holder.mItem);
-                        if (index >= mValues.size() - 2) {
-                            Intent updateUI = new Intent();
-                            updateUI.setAction(MessageListFragment.ACTION_LAST_IMAGE_LOADED);
-                            updateUI.putExtra(MessageListFragment.INTENT_LIST_ITEM_LOADED, index);
-                            holder.imageView.getContext().sendBroadcast(updateUI);
-                        }
-                        return false;
-                    }
-                })
-                .into(holder.imageView);
+                loading = false;
+                holder.imageView.getLayoutParams().height = RecyclerView.LayoutParams.WRAP_CONTENT;
+                int index = mValues.indexOf(holder.mItem);
+                if (index >= mValues.size() - 2) {
+                    Intent updateUI = new Intent();
+                    updateUI.setAction(MessageListFragment.ACTION_LAST_IMAGE_LOADED);
+                    updateUI.putExtra(MessageListFragment.INTENT_LIST_ITEM_LOADED, index);
+                    holder.imageView.getContext().sendBroadcast(updateUI);
+                }
+            }
+
+            @Override
+            public void imageHasFailedToLoad(String ref) {
+                Log.d("BINDER", "load failed");
+                holder.imageView.setImageResource(R.drawable.sample_image);
+                loading = false;
+            }
+        });
     }
 
     private void bindMiscaImageMessage(final ViewHolder holder) {

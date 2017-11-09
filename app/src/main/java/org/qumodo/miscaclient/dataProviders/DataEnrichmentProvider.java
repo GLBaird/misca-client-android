@@ -129,6 +129,8 @@ public class DataEnrichmentProvider {
             DatabaseHelper dh = new DatabaseHelper(context);
             SQLiteDatabase db = dh.getWritableDatabase();
 
+            db.execSQL(Enrichments.SQL_CREATE_ENTRIES);
+
             Cursor cursor = db.query(Enrichments.EnrichmentsEntry.TABLE_NAME, Enrichments.projection, null, null, null, null, null);
             while (cursor.moveToNext()) {
                 String messageID = cursor.getString(cursor.getColumnIndex(Enrichments.EnrichmentsEntry.MESSAGE_ID));

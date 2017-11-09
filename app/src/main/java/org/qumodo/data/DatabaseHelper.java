@@ -24,6 +24,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     private void setupTables(SQLiteDatabase db) {
+        Log.d("DatabaseHelper", "Tables Setup");
         db.execSQL(Users.SQL_CREATE_ENTRIES);
         db.execSQL(Groups.SQL_CREATE_ENTRIES);
         db.execSQL(Messages.SQL_CREATE_ENTRIES);

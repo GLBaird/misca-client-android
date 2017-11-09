@@ -25,7 +25,7 @@ public class Enrichments {
     }
 
     public static final String SQL_CREATE_ENTRIES =
-            "CREATE TABLE " + EnrichmentsEntry.TABLE_NAME + " (" +
+            "CREATE TABLE IF NOT EXISTS " + EnrichmentsEntry.TABLE_NAME + " (" +
                     EnrichmentsEntry._ID + " TEXT PRIMARY KEY," +
                     EnrichmentsEntry.MESSAGE_ID + " TEXT," +
                     EnrichmentsEntry.COLUMN_NAME_ANPR + " TEXT," +
