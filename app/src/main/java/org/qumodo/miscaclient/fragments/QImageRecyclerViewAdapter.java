@@ -1,10 +1,8 @@
 package org.qumodo.miscaclient.fragments;
 
-import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,7 +17,6 @@ import com.bumptech.glide.request.RequestListener;
 import com.bumptech.glide.request.target.Target;
 
 import org.qumodo.data.MediaLoader;
-import org.qumodo.data.MediaLoaderListener;
 import org.qumodo.data.models.MiscaImage;
 import org.qumodo.miscaclient.R;
 import org.qumodo.miscaclient.fragments.QImageListFragment.OnListFragmentInteractionListener;

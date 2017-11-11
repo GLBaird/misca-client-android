@@ -1,19 +1,6 @@
 package org.qumodo.miscaclient.dataProviders;
 
-import android.content.Context;
-import android.content.Intent;
-import android.location.Location;
-
-import com.bumptech.glide.Glide;
-import com.google.android.gms.maps.model.LatLng;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.qumodo.data.models.MiscaImage;
-import org.qumodo.network.QMessage;
-import org.qumodo.network.QMessageType;
-import org.qumodo.services.QTCPSocketService;
 
 import java.util.ArrayList;
 import java.util.HashMap;
