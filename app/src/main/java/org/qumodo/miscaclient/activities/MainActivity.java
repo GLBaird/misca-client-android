@@ -480,23 +480,6 @@ public class MainActivity extends Activity implements QMiscaGroupsListFragment.O
         inflater.inflate(R.menu.user_ids, menu);
 
 
-        String userID = UserSettingsManager.getUserID();
-
-        Log.d(TAG, "Startig wit "+userID);
-
-        for (int i = 0; i < menu.size(); i++) {
-           if (menu.getItem(i).getItemId() == R.id.action_user_a)
-            item1 = menu.getItem(i);
-           else if (menu.getItem(i).getItemId() == R.id.action_user_b)
-            item2 = menu.getItem(i);
-        }
-
-        if (userID != null && userID.equals(UserSettingsManager.USER_ID_A)) {
-            setMenuForID(R.id.action_user_a);
-        } else if (userID != null && userID.equals(UserSettingsManager.USER_ID_B)) {
-            setMenuForID(R.id.action_user_b);
-        }
-
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -510,28 +493,6 @@ public class MainActivity extends Activity implements QMiscaGroupsListFragment.O
         switch (id) {
             case android.R.id.home:
                 getFragmentManager().popBackStack();
-                return true;
-
-            case R.id.action_user_a:
-                UserSettingsManager.setUserID(UserSettingsManager.USER_ID_A);
-                item1.setTitle("USER A **SELECTED");
-                item2.setTitle("USER B");
-                checkForLoadingFragment();
-                return true;
-
-            case R.id.action_user_b:
-                UserSettingsManager.setUserID(UserSettingsManager.USER_ID_B);
-                item1.setTitle("USER A");
-                item2.setTitle("USER B **SELECTED");
-                checkForLoadingFragment();
-                return true;
-
-            case R.id.action_config_host:
-                ServerDetails.showHostNameDialoge(this);
-                return true;
-
-            case R.id.action_config_port:
-                ServerDetails.showPortNumberDialog(this);
                 return true;
 
             case R.id.action_restart_socket:
