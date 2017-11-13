@@ -52,7 +52,11 @@ public class MessageListFragment extends Fragment implements View.OnClickListene
         @Override
         public void onReceive(Context context, Intent intent) {
             int messageCount = MessageContentProvider.ITEMS.size();
-            switch (intent.getAction()) {
+            String action = intent.getAction();
+            Log.d(TAG, "Action received " + action);
+            if (action == null)
+                return;
+            switch (action) {
                 case ACTION_LAST_IMAGE_LOADED:
                     int itemLoaded = intent.getIntExtra(INTENT_LIST_ITEM_LOADED, 0);
                     if ((itemLoaded == messageCount - 2 && imageLoadCount <= 1)

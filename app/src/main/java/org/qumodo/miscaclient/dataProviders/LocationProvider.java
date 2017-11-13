@@ -31,6 +31,10 @@ public class LocationProvider implements LocationListener {
     private Location location;
     private GoogleApiClient googleApiClient;
 
+    public GoogleApiClient getGoogleApiClient() {
+        return googleApiClient;
+    }
+
     @Nullable
     public LatLng getCurrentLocation() {
         if (location == null) {

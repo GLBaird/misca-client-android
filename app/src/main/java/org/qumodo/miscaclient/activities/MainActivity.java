@@ -105,7 +105,11 @@ public class MainActivity extends Activity implements QMiscaGroupsListFragment.O
     private BroadcastReceiver receiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            switch (intent.getAction()) {
+            String action = intent.getAction();
+            if (action == null) {
+                return;
+            }
+            switch (action) {
                 case ACTION_SHOW_IMAGE_GALLERY:
                     onOpenImageListIntent();
                     break;
@@ -277,17 +281,10 @@ public class MainActivity extends Activity implements QMiscaGroupsListFragment.O
     public void onListFragmentInteraction(GroupListItem item) {
         groupID = item.id;
         MessageContentProvider.setup(getApplicationContext(), groupID);
-        MessageListFragment fragment = new MessageListFragment();
-        fragment.setGroup(groupID, getApplicationContext());
-        fragment.setRetainInstance(true);
-        getFragmentManager()
-                .beginTransaction()
-                .replace(R.id.main_activity_fragment_container, fragment, MessageListFragment.TAG)
-                .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
-                .addToBackStack(QMiscaGroupsListFragment.TAG)
-                .commit();
-        if (actionBar != null)
-            actionBar.setDisplayHomeAsUpEnabled(true);
+
+        Intent groupMessageList = new Intent(this, GroupViewActivity.class);
+        groupMessageList.putExtra(GroupViewActivity.INTENT_GROUP_ID, groupID);
+        startActivity(groupMessageList);
     }
 
     @Override
