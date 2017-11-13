@@ -11,5 +11,5 @@
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="select_user_account_from_menu">Select user account from Menu</string>
     <string name="title_activity_group_view">GroupViewActivity</string>
-    <string name="title_activity_startup">StartupActivity</string>
+    <string name="title_activity_startup">Connect to Misca</string>
 </resources>
