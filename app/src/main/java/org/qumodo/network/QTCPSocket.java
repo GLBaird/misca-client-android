@@ -112,10 +112,15 @@ public class QTCPSocket {
 
     public void readInputStream() {
         try {
-            String message = is.readLine();
+            String message = null;
+            if (is != null)
+                message = is.readLine();
             if (message != null) {
                 Log.d(LOG_TAG, "Socket data: " + message);
                 listener.socketData(message);
+            } else if (is != null && is.read() == -1) {
+                listener.socketClosed();
+                closeSocket();
             }
         } catch (IOException e) {
             Log.d(LOG_TAG, "Error reading from socket");

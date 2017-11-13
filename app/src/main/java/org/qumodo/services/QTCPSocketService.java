@@ -32,6 +32,11 @@ public class QTCPSocketService extends Service implements Runnable, QClientSocke
 
     private Thread thread = null;
 
+    private static QTCPSocket currentSocket;
+    public static boolean isConnected() {
+        return currentSocket != null && currentSocket.isConnected();
+    }
+
     QTCPSocket socketClient;
 
     private void startThread() {
@@ -50,6 +55,8 @@ public class QTCPSocketService extends Service implements Runnable, QClientSocke
         public void onReceive(Context context, Intent intent) {
 
             String action = intent.getAction();
+            if (action == null)
+                return;
             switch (action) {
                 case ACTION_SEND_MESSAGE:
                     String message = intent.getStringExtra(INTENT_KEY_MESSAGE);
@@ -61,6 +68,9 @@ public class QTCPSocketService extends Service implements Runnable, QClientSocke
                     tearDownSocket();
                     break;
                 case ACTION_RESTART_SOCKET:
+                    if (socketClient.isConnected()) {
+                        socketClient.closeSocket();
+                    }
                     startSocket();
                     break;
             }
@@ -82,7 +92,7 @@ public class QTCPSocketService extends Service implements Runnable, QClientSocke
         Intent messageIntent = new Intent();
         messageIntent.setAction(delegationEvent);
         messageIntent.putExtra(INTENT_KEY_MESSAGE, message);
-        sendBroadcast(messageIntent);
+        getApplicationContext().sendBroadcast(messageIntent);
     }
 
     private void broadcastError(String delegationError, String errorMessage, String message) {
@@ -93,7 +103,7 @@ public class QTCPSocketService extends Service implements Runnable, QClientSocke
         if (message != null) {
             errorIntent.putExtra(INTENT_KEY_MESSAGE, message);
         }
-        sendBroadcast(errorIntent);
+        getApplicationContext().sendBroadcast(errorIntent);
     }
 
     String hostName;
@@ -122,6 +132,7 @@ public class QTCPSocketService extends Service implements Runnable, QClientSocke
         if (socketClient == null) {
             Log.d(LOG_TAG, "Making socket");
             socketClient = new QTCPSocket(hostName, portNumber, this);
+            currentSocket = socketClient;
             startThread();
         }
     }
@@ -150,6 +161,7 @@ public class QTCPSocketService extends Service implements Runnable, QClientSocke
         Log.d(LOG_TAG, "Tear Down Socket Command...");
         if (socketClient.isConnected() || !socketClient.isClosed()) {
             socketClient.closeSocket();
+            currentSocket = null;
         }
         stopThread();
         stopSelf();

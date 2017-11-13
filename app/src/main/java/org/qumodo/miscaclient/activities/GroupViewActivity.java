@@ -1,32 +1,27 @@
 package org.qumodo.miscaclient.activities;
 
-import android.app.Activity;
-import android.app.Fragment;
+import android.app.ActionBar;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
+import android.app.Activity;
 
 import org.qumodo.miscaclient.R;
-import org.qumodo.miscaclient.fragments.QImageViewFragment;
 import org.qumodo.services.QTCPSocketService;
 
-public class ImageViewActivity extends Activity {
-
-    public static final String INTENT_IMAGE_PATH = "org.qumodo.miscaclient.ImageViewActivity.IntentImagePath";
-    public static final String INTENT_IMAGE_ID = "org.qumodo.miscaclient.ImageViewActivity.IntentImageID";
-    public static final String INTENT_SERVICE = "org.qumodo.miscaclient.ImageViewActivity.IntentService";
+public class GroupViewActivity extends Activity {
 
     private BroadcastReceiver receiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
             if (action == null)
-                    return;
+                return;
             switch (action) {
                 case QTCPSocketService.DELEGATE_SOCKET_CLOSED:
-                    Intent startupActivity = new Intent(ImageViewActivity.this, StartupActivity.class);
+                    Intent startupActivity = new Intent(GroupViewActivity.this, StartupActivity.class);
                     startupActivity.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
                     startActivity(startupActivity);
 
@@ -37,28 +32,15 @@ public class ImageViewActivity extends Activity {
     };
 
     @Override
-    public boolean onNavigateUp() {
-        finish();
-        return true;
-    }
-
-
-    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_image_view);
-
-        String imageID = getIntent().getStringExtra(INTENT_IMAGE_ID);
-        String imagePath = getIntent().getStringExtra(INTENT_IMAGE_PATH);
-        int service = getIntent().getIntExtra(INTENT_SERVICE, 0);
-
-        Fragment fragment = QImageViewFragment.newInstance(imagePath, service, imageID);
-        fragment.setRetainInstance(true);
-        getFragmentManager()
-                .beginTransaction()
-                .add(R.id.image_view_fragment_container, fragment, QImageViewFragment.TAG)
-                .commit();
+        setContentView(R.layout.activity_group_view);
+        ActionBar ab = getActionBar();
+        if (ab != null) {
+            ab.setDisplayHomeAsUpEnabled(true);
+        }
     }
+
 
     @Override
     protected void onStart() {

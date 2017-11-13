@@ -101,6 +101,7 @@ public class MainActivity extends Activity implements QMiscaGroupsListFragment.O
 
     private Location userLocation;
 
+
     private BroadcastReceiver receiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -116,8 +117,12 @@ public class MainActivity extends Activity implements QMiscaGroupsListFragment.O
                         onOpenImagePreviewIntent(pathName, service, imageID);
                     }
                     break;
-                case ACTION_OBJECT_SEARCH_RESULTS:
+                case QTCPSocketService.DELEGATE_SOCKET_CLOSED:
+                    Intent startupActivity = new Intent(MainActivity.this, StartupActivity.class);
+                    startupActivity.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                    startActivity(startupActivity);
 
+                    finish();
                     break;
             }
         }
@@ -161,11 +166,6 @@ public class MainActivity extends Activity implements QMiscaGroupsListFragment.O
             loadMainFragment();
         }
 
-        IntentFilter actions = new IntentFilter();
-        actions.addAction(ACTION_SHOW_IMAGE_GALLERY);
-        actions.addAction(ACTION_SHOW_IMAGE_VIEW);
-        registerReceiver(receiver, actions);
-
         chatModeButton = findViewById(R.id.mode_view_chat_button);
         objectModeButton = findViewById(R.id.mode_view_object_find_button);
         mapModeButton = findViewById(R.id.mode_view_map_button);
@@ -197,6 +197,7 @@ public class MainActivity extends Activity implements QMiscaGroupsListFragment.O
         actions.addAction(ACTION_SHOW_IMAGE_GALLERY);
         actions.addAction(ACTION_SHOW_IMAGE_VIEW);
         actions.addAction(ACTION_OBJECT_SEARCH_RESULTS);
+        actions.addAction(QTCPSocketService.DELEGATE_SOCKET_CLOSED);
         registerReceiver(receiver, actions);
         Log.d(TAG, "Intent receiver registered");
     }
@@ -540,12 +541,6 @@ public class MainActivity extends Activity implements QMiscaGroupsListFragment.O
                 Intent closeSocket = new Intent();
                 closeSocket.setAction(QTCPSocketService.ACTION_CLOSE_SOCKET);
                 sendBroadcast(closeSocket);
-
-                Intent socketService = new Intent(this, QTCPSocketService.class);
-                socketService.putExtra(QTCPSocketService.INTENT_KEY_HOSTNAME, ServerDetails.getSocketHostName());
-                socketService.putExtra(QTCPSocketService.INTENT_KEY_PORT, ServerDetails.getSocketPortNumber());
-                startService(socketService);
-
                 return true;
 
             default:

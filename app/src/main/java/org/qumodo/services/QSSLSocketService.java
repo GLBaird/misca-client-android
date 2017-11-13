@@ -12,6 +12,7 @@ import android.util.Log;
 
 import org.qumodo.network.QSSLClientSocket;
 import org.qumodo.network.QClientSocketListener;
+import org.qumodo.network.QTCPSocket;
 
 import java.io.IOException;
 import java.security.KeyManagementException;

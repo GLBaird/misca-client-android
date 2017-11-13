@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="org.qumodo.miscaclient.activities.StartupActivity">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:orientation="vertical"
+        android:gravity="center">
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/misca_solid_icon" />
+
+        <TextView
+            android:id="@+id/text_connection_info"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="30dp"
+            android:textAllCaps="false"
+            android:background="@color/colorWhite"
+            android:textColor="@color/colorTextLight"
+            android:text="Connecting to server..."/>
+
+        <Button
+            android:id="@+id/button_try_again"
+            android:visibility="gone"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/colorButtonBlue"
+            android:background="@color/colorWhite"
+            android:textAllCaps="false"
+            style="@style/Base.Widget.AppCompat.Button.Borderless"
+            android:text="Connect to MISCA"/>
+
+        <ProgressBar
+            android:visibility="gone"
+            android:id="@+id/spinner"
+            android:layout_marginTop="20dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+    </LinearLayout>
+
+</FrameLayout>

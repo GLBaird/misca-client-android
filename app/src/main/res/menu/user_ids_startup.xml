@@ -21,10 +21,4 @@
         android:title="Config Port Number"
         app:showAsAction="never" />
 
-    <item
-        android:id="@+id/action_restart_socket"
-        android:title="Disconnect from MISCA"
-        app:showAsAction="never" />
-
-
 </menu>

@@ -1,7 +1,9 @@
 package org.qumodo.miscaclient;
 
+import android.app.ActivityManager;
 import android.app.Application;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -11,6 +13,7 @@ import android.widget.Toast;
 import org.json.JSONObject;
 import org.qumodo.data.MediaLoader;
 import org.qumodo.data.MessageCenter;
+import org.qumodo.miscaclient.activities.StartupActivity;
 import org.qumodo.miscaclient.dataProviders.GroupsContentProvider;
 import org.qumodo.miscaclient.dataProviders.ServerDetails;
 import org.qumodo.miscaclient.dataProviders.UserSettingsManager;
@@ -18,7 +21,13 @@ import org.qumodo.network.QMessage;
 import org.qumodo.network.QMessageType;
 import org.qumodo.services.QTCPSocketService;
 
+import java.util.List;
+
 public class QMiscaClientApplication extends Application {
+
+    public interface SocketCloseListener {
+        void socketHasClosed();
+    }
 
     private static final String TAG = "QMiscaClientApplication";
 
@@ -32,16 +41,22 @@ public class QMiscaClientApplication extends Application {
         return null;
     }
 
+    private SocketCloseListener socketCloseListener;
+    public void setSocketCloseListener(SocketCloseListener listener) {
+        socketCloseListener = listener;
+    }
+
     private static int port;
     private static String hostname;
     public static final String APPLICATION_TEAR_SOCKET_DOWN = "org.qumodo.misca.QMiscaClientApplication.TEAR_DOWN_SOCKET";
     public static final String APPLICATION_CONNECT_SOCKET = "org.qumodo.misca.QMiscaClientApplication.CONNECT_SOCKET";
-    public Boolean socketServiceActive = true;
+    public Boolean socketServiceActive = false;
 
     private BroadcastReceiver receiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
         String action = intent.getAction();
+        Log.d("App", "Checking action " + action);
         if (
             action.equals(QTCPSocketService.DELEGATE_SOCKET_ERROR)
             || action.equals(QTCPSocketService.DELEGATE_SOCKET_CLOSED)
@@ -51,6 +66,9 @@ public class QMiscaClientApplication extends Application {
             Log.d(TAG, "Socket Closed");
             Toast.makeText(getApplicationContext(), "Connection to MISCA has closed", Toast.LENGTH_SHORT)
                  .show();
+            if (socketCloseListener != null) {
+                socketCloseListener.socketHasClosed();
+            }
         } else if (action.equals(QTCPSocketService.DELEGATE_SOCKET_CONNECTION)) {
             socketServiceActive = true;
             Log.d(TAG, "Socket connected");
@@ -61,6 +79,7 @@ public class QMiscaClientApplication extends Application {
             sendBroadcast(closeSocketIntent);
             socketServiceActive = false;
         } else if (action.equals(APPLICATION_CONNECT_SOCKET) && !socketServiceActive) {
+            Log.d("App", "Connecting Socket");
             startTCPSocket();
         }
         }
