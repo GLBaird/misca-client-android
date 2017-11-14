@@ -38,6 +38,7 @@
         android:background="@drawable/rounded_text_box"
         android:textColor="@color/colorChatTextBlack"
         android:inputType="textAutoComplete|textCapSentences"
+        android:hint="type message…"
         android:layout_marginBottom="@dimen/list_margin"
         android:layout_marginStart="@dimen/list_margin"
         android:layout_marginEnd="@dimen/list_margin"
@@ -59,7 +60,7 @@
     <Button
         android:id="@+id/send_button"
         android:background="@drawable/round_send_button"
-        android:layout_width="50dp"
+        android:layout_width="38dp"
         android:layout_height="match_parent"
         android:layout_centerVertical="true"
         android:gravity="center_vertical"
