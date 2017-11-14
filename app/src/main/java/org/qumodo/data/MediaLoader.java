@@ -174,6 +174,10 @@ public class MediaLoader {
         return new File(dir, id + ".jpg");
     }
 
+    public static Uri getImageURI(String id, String imageStore, Context context) {
+        return Uri.fromFile(getImageFile(id, imageStore, context));
+    }
+
     public static final String IMAGE_STORE_UPLOADS = "uploads";
     public static final String IMAGE_STORE_AVATARS = "avatars";
     public static final String IMAGE_STORE_CORE_IMAGE = "core_image";

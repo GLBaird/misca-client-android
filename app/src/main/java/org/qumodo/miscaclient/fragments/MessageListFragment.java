@@ -87,7 +87,7 @@ public class MessageListFragment extends Fragment implements View.OnClickListene
     }
 
     public void setGroup(String groupID, Context context) {
-        DataManager dm = new DataManager(context);
+        DataManager dm = new DataManager(context);// TODO: WORKING...
         group = dm.getGroup(groupID);
     }
 

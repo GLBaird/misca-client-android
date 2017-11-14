@@ -29,10 +29,12 @@ import org.qumodo.data.MediaLoader;
 import org.qumodo.data.models.Message;
 import org.qumodo.miscaclient.BuildConfig;
 import org.qumodo.miscaclient.R;
+import org.qumodo.miscaclient.controllers.MiscaCommandRunner;
 import org.qumodo.miscaclient.controllers.MiscaWorkflowManager;
 import org.qumodo.miscaclient.dataProviders.LocationProvider;
 import org.qumodo.miscaclient.dataProviders.UserSettingsManager;
 import org.qumodo.miscaclient.fragments.MessageListFragment;
+import org.qumodo.miscaclient.fragments.ObjectSearchFragment;
 import org.qumodo.miscaclient.fragments.QMiscaGroupsListFragment;
 import org.qumodo.network.QMessage;
 import org.qumodo.network.QMessageType;
@@ -71,6 +73,10 @@ public class GroupViewActivity extends Activity implements MessageListFragment.O
 
                     finish();
                     break;
+                case ObjectSearchFragment.ACTION_CLASSIFICATION_RESULT:
+                    String classification = intent.getStringExtra(ObjectSearchFragment.INTENT_CLASSIFICATION);
+                    MiscaCommandRunner.runObjectDetection(classification, groupID, GroupViewActivity.this);
+                    break;
             }
         }
     };
@@ -106,6 +112,7 @@ public class GroupViewActivity extends Activity implements MessageListFragment.O
         super.onStart();
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(QTCPSocketService.DELEGATE_SOCKET_CLOSED);
+        intentFilter.addAction(ObjectSearchFragment.ACTION_CLASSIFICATION_RESULT);
         registerReceiver(receiver, intentFilter);
 
         if (googleApiClient != null) {
@@ -199,7 +206,8 @@ public class GroupViewActivity extends Activity implements MessageListFragment.O
         } else if (requestCode == CropImage.CROP_IMAGE_ACTIVITY_REQUEST_CODE) {
             CropImage.ActivityResult result = CropImage.getActivityResult(data);
             if (resultCode == RESULT_OK) {
-//                searchForObject(result.getUri());
+                MiscaCommandRunner.addMiscaMessage("Uploading image for classification...", groupID, this);
+                MediaLoader.imageSearch(result.getUri());
             } else if (resultCode == CropImage.CROP_IMAGE_ACTIVITY_RESULT_ERROR_CODE) {
                 Exception error = result.getError();
                 Log.d(TAG, "Error with crop " + error);

@@ -1,5 +1,6 @@
 package org.qumodo.miscaclient.controllers;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Rect;
@@ -8,9 +9,12 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.theartofdev.edmodo.cropper.CropImage;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.qumodo.data.DataManager;
+import org.qumodo.data.MediaLoader;
 import org.qumodo.data.MessageCenter;
 import org.qumodo.data.models.EnrichmentData;
 import org.qumodo.data.models.Message;
@@ -30,11 +34,11 @@ import java.util.List;
 
 public class MiscaCommandRunner {
 
-    Context context;
-    MiscaWorkflowCommands command;
-    DataManager dm;
-    String imageID;
-    String groupID;
+    private Context context;
+    private MiscaWorkflowCommands command;
+    private DataManager dm;
+    private String imageID;
+    private String groupID;
 
     private MiscaCommandRunner(Context context, String imageID, String groupID,
                                MiscaWorkflowCommands command, DataManager dm) {
@@ -50,6 +54,18 @@ public class MiscaCommandRunner {
         MiscaCommandRunner commandRunner = new MiscaCommandRunner(context, imageID,
                 groupID, command, dm);
         commandRunner.run();
+    }
+
+    public static void addMiscaMessage(String message, String groupID, Context context) {
+        DataManager dm = new DataManager(context);
+        MiscaCommandRunner commandRunner = new MiscaCommandRunner(context, null, groupID, MiscaWorkflowCommands.DO_NOTHING, dm);
+        commandRunner.addMiscaTextMessage(message);
+    }
+
+    public static void runObjectDetection(String classification, String groupID, Context context) {
+        DataManager dm = new DataManager(context);
+        MiscaCommandRunner commandRunner = new MiscaCommandRunner(context, null, groupID, MiscaWorkflowCommands.DO_NOTHING, dm);
+        commandRunner.getObjectInformation(classification);
     }
 
     private void run() {
@@ -74,14 +90,20 @@ public class MiscaCommandRunner {
 
     private void runObjectDetectionCrop() {
         Toast.makeText(context, "Object Detection Crop", Toast.LENGTH_SHORT).show();
+        CropImage.activity(MediaLoader.getImageURI(imageID, MediaLoader.IMAGE_STORE_UPLOADS, context))
+                .setAllowRotation(true)
+                .setActivityTitle("Crop to object")
+                .start((Activity) context);
     }
 
-    private void addMiscaTextMessage(String text) {
+    public void addMiscaTextMessage(String text) {
         Message m = dm.addNewMessage(text, QMessageType.MISCA_TEXT, groupID, null,
                 UserSettingsManager.getMiscaID(), null);
         MessageContentProvider.addItem(m);
         updateListUI();
     }
+
+    boolean timeoutTick = false;
 
     private void runObjectDetection() {
         EnrichmentData data = DataEnrichmentProvider.getProvider().getDataWithID(imageID);
@@ -89,10 +111,14 @@ public class MiscaCommandRunner {
             processObjectDetectionData(data);
         } else {
             addMiscaTextMessage("Object recognition is being performed on the image above.");
-
-            final CountDownTimer timer = new CountDownTimer(6000, 6000) {
+            timeoutTick = false;
+            final CountDownTimer timer = new CountDownTimer(10000, 6000) {
                 @Override
-                public void onTick(long l) { }
+                public void onTick(long l) {
+                    if (timeoutTick)
+                        addMiscaTextMessage("Awaiting image data.");
+                    timeoutTick = true;
+                }
 
                 @Override
                 public void onFinish() {
@@ -118,6 +144,15 @@ public class MiscaCommandRunner {
         } else {
             addMiscaTextMessage("No object was detected in the photo. " +
                     "Please try again with a different picture");
+        }
+    }
+
+    public void processObjectDetection(String classification) {
+        if (classification == null || classification.isEmpty()) {
+            addMiscaTextMessage("No object was detected in the photo. " +
+                    "Please try again with a different picture");
+        } else {
+            getObjectInformation(classification);
         }
     }
 
