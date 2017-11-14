@@ -53,18 +53,22 @@ public class LocationProvider implements LocationListener {
     }
 
     public void updateLocation(Context context) {
-        if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION)
-                == PackageManager.PERMISSION_GRANTED) {
-            location = LocationServices.FusedLocationApi.getLastLocation(googleApiClient);
+//        if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION)
+//                == PackageManager.PERMISSION_GRANTED) {
+//            location = LocationServices.FusedLocationApi.getLastLocation(googleApiClient);
+//
+//            LocationRequest locationRequest = new LocationRequest();
+//            locationRequest.setInterval(500);
+//            locationRequest.setFastestInterval(1);
+//            locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+//
+//            LocationServices.FusedLocationApi.requestLocationUpdates(
+//                    googleApiClient, locationRequest, this);
+//        }
 
-            LocationRequest locationRequest = new LocationRequest();
-            locationRequest.setInterval(500);
-            locationRequest.setFastestInterval(1);
-            locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-
-            LocationServices.FusedLocationApi.requestLocationUpdates(
-                    googleApiClient, locationRequest, this);
-        }
+        location = new Location("");
+        location.setLatitude(51.508515);
+        location.setLongitude(-0.099034);
     }
 
     @Override

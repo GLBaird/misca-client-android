@@ -618,6 +618,10 @@ public class MainActivity extends Activity implements QMiscaGroupsListFragment.O
 
     private void getUserLocation() {
         Log.d(TAG, "Starting location");
+        userLocation = new Location("");
+        userLocation.setLatitude(51.508515);
+        userLocation.setLongitude(-0.099034);
+
         if (userLocation == null
                 && ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                     == PackageManager.PERMISSION_GRANTED

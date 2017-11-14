@@ -1,12 +1,15 @@
 package org.qumodo.miscaclient.fragments;
 
 
+import android.Manifest;
 import android.app.ActionBar;
 import android.app.Activity;
 import android.app.Fragment;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
+import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -16,6 +19,7 @@ import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -63,7 +67,6 @@ public class QMiscaMapView extends Fragment implements OnMapReadyCallback,
     }
 
 
-
     public void updateMapView(Location userLocation, GoogleApiClient googleApiClient) {
         this.userLocation = userLocation;
         this.googleApiClient = googleApiClient;
@@ -93,14 +96,8 @@ public class QMiscaMapView extends Fragment implements OnMapReadyCallback,
     private void updatePositionOnMap() {
         if (!waitForMap) {
             LatLng location = getLocationPosition();
-            if (currentUserPosition == null && location != null) {
-                MarkerOptions markerOptions = getUserPositionMarkerOptions(location);
-                currentUserPosition = googleMap.addMarker(markerOptions);
-            } else if (currentUserPosition != null && location != null) {
-                currentUserPosition.setPosition(location);
-            }
             if (googleMap != null && location != null) {
-                googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(getLocationPosition(), 15));
+                googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(location, 15));
             }
             if (userLocation != null && searchTerm == null) {
                 LocationImageProvider.getLocationImages(userLocation, getContext());
@@ -172,6 +169,28 @@ public class QMiscaMapView extends Fragment implements OnMapReadyCallback,
     public void onMapReady(GoogleMap googleMap) {
         waitForMap = false;
         this.googleMap = googleMap;
+        if (ActivityCompat.checkSelfPermission(getContext(),
+                Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+                && ActivityCompat.checkSelfPermission(getContext(),
+                Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            googleMap.setMyLocationEnabled(true);
+        }
+        googleMap.getUiSettings().setTiltGesturesEnabled(true);
+        googleMap.getUiSettings().setCompassEnabled(true);
+        googleMap.getUiSettings().setZoomControlsEnabled(true);
+        googleMap.getUiSettings().setMyLocationButtonEnabled(true);
+        googleMap.getUiSettings().setMapToolbarEnabled(true);
+
+        View map_view = mapFragment.getView();
+        if (map_view != null) {
+            View location_button = map_view.findViewWithTag("GoogleMapMyLocationButton");
+            View zoom_in_button = map_view.findViewWithTag("GoogleMapZoomInButton");
+            View zoom_layout = (View) zoom_in_button.getParent();
+            RelativeLayout.LayoutParams location_layout = (RelativeLayout.LayoutParams) location_button.getLayoutParams();
+            location_layout.addRule(RelativeLayout.ALIGN_PARENT_TOP, 0);
+            location_layout.addRule(RelativeLayout.ABOVE, zoom_layout.getId());
+        }
+
         setupClusterManager(googleMap);
         if (userLocation != null) {
             updatePositionOnMap();

@@ -103,27 +103,19 @@ public class MiscaCommandRunner {
         updateListUI();
     }
 
-    boolean timeoutTick = false;
-
     private void runObjectDetection() {
         EnrichmentData data = DataEnrichmentProvider.getProvider().getDataWithID(imageID);
         if (data != null) {
             processObjectDetectionData(data);
         } else {
             addMiscaTextMessage("Object recognition is being performed on the image above.");
-            timeoutTick = false;
-            final CountDownTimer timer = new CountDownTimer(10000, 6000) {
+            final CountDownTimer timer = new CountDownTimer(6000, 6000) {
                 @Override
-                public void onTick(long l) {
-                    if (timeoutTick)
-                        addMiscaTextMessage("Awaiting image data.");
-                    timeoutTick = true;
-                }
+                public void onTick(long l) {}
 
                 @Override
                 public void onFinish() {
-                    addMiscaTextMessage("No response from server. " +
-                            "Probably something has gone wrong.");
+                    addMiscaTextMessage("Waiting for object data.");
                 }
             };
             timer.start();
@@ -194,8 +186,7 @@ public class MiscaCommandRunner {
 
                 @Override
                 public void onFinish() {
-                    addMiscaTextMessage("No response from server. " +
-                            "Probably something has gone wrong.");
+                    addMiscaTextMessage("Waiting for ANPR data.");
                 }
             };
             timer.start();

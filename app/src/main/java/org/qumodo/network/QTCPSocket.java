@@ -18,6 +18,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 
 public class QTCPSocket {
@@ -67,7 +68,8 @@ public class QTCPSocket {
         try {
             InetAddress serverAddress = InetAddress.getByName(hostname);
             Log.d(LOG_TAG, "PORT: " + port);
-            socket = new Socket(serverAddress, port);
+            socket = new Socket();
+            socket.connect(new InetSocketAddress(serverAddress, port), 2000);
             setupBuffers();
             listener.socketConnectionEstablished();
         } catch (IOException e) {
