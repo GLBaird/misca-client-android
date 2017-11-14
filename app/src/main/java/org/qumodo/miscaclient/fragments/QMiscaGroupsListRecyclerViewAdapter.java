@@ -2,6 +2,7 @@ package org.qumodo.miscaclient.fragments;
 
 import android.graphics.Bitmap;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -46,7 +47,6 @@ public class QMiscaGroupsListRecyclerViewAdapter extends RecyclerView.Adapter<QM
         holder.iconView.setFlagged(holder.mItem.userOnline, false);
         holder.refreshIconPreview();
 
-
         holder.mView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -88,10 +88,10 @@ public class QMiscaGroupsListRecyclerViewAdapter extends RecyclerView.Adapter<QM
         public void refreshIconPreview() {
             iconView.setVisibility(View.INVISIBLE);
             loader.setVisibility(View.VISIBLE);
-            MediaLoader.getUserCircularAvatar(mItem.lastMessageFromID, new MediaLoaderListener() {
+            MediaLoader.getUserCircularAvatar(mItem.id, new MediaLoaderListener() {
                 @Override
                 public void imageHasLoaded(String ref, Bitmap image, double scale) {
-                    if (ref.equals(mItem.lastMessageFromID)) {
+                    if (ref.equals(mItem.id)) {
                         loader.setVisibility(View.INVISIBLE);
                         iconView.setVisibility(View.VISIBLE);
                         iconView.setUserImage(image, true);

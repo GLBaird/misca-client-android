@@ -97,10 +97,24 @@ public class MediaLoader {
         listener.imageHasLoaded(userID, file, scale);
     }
 
-    public static void getUserCircularAvatar(String userID, MediaLoaderListener listener) {
-        Bitmap file = BitmapFactory.decodeResource(appContext.getResources(), R.drawable.face);
-        file = getCircularBitmap(file);
-        listener.imageHasLoaded(userID, file, scale);
+    public static void getUserCircularAvatar(final String userID, final MediaLoaderListener listener) {
+        LoadMessageImage worker = new LoadMessageImage(userID, appContext, new MediaLoaderListener() {
+            @Override
+            public void imageHasLoaded(String ref, Bitmap image, double scale) {
+                image = getCircularBitmap(image);
+                listener.imageHasLoaded(ref, image, scale);
+            }
+
+            @Override
+            public void imageHasFailedToLoad(String ref) {
+                Bitmap file = BitmapFactory.decodeResource(appContext.getResources(), R.drawable.face);
+                file = getCircularBitmap(file);
+                listener.imageHasLoaded(userID, file, scale);
+            }
+        });
+        worker.imageStore = IMAGE_STORE_AVATARS;
+        worker.execute();
+
     }
 
     public static Bitmap rotateBitmap(Bitmap source, float angle, boolean scaleImage)
@@ -255,6 +269,7 @@ public class MediaLoader {
         String thumbSize;
         String messageID;
         Context context;
+        String imageStore = IMAGE_STORE_UPLOADS;
         MediaLoaderListener listener;
 
         LoadMessageImage(String messageID, Context context, MediaLoaderListener listener) {
@@ -275,7 +290,12 @@ public class MediaLoader {
         private Bitmap downloadImageFromServer(String apiRoute, String imageStore) {
             if (messageID != null || coreImagePath != null) {
                 try {
-                    URL imageStoreURL = getMessageImageURL(messageID != null ? messageID : coreImagePath, apiRoute, thumbSize);
+
+                    URL imageStoreURL;
+                    if (imageStore.equals(MediaLoader.IMAGE_STORE_AVATARS))
+                        imageStoreURL = getMessageImageURL(messageID, appContext.getResources().getString(R.string.online_image_user_avatar_route), null);
+                    else
+                        imageStoreURL = getMessageImageURL(messageID != null ? messageID : coreImagePath, apiRoute, thumbSize);
 
                     Log.d(TAG, "Downloading from " + imageStoreURL.toString());
 
@@ -315,7 +335,7 @@ public class MediaLoader {
         protected Bitmap doInBackground(String... params) {
             File imageFile;
             if (messageID != null) {
-                imageFile = getImageFile(messageID, IMAGE_STORE_UPLOADS, context);
+                imageFile = getImageFile(messageID, imageStore, context);
             } else {
                 imageFile = getImageFile(imageID, thumbSize == null ?  IMAGE_STORE_CORE_IMAGE : IMAGE_STORE_CORE_IMAGE_THUMB, context);
             }
@@ -327,8 +347,10 @@ public class MediaLoader {
             } else {
                 Log.d(TAG, "Downloading from server");
                 String apiRoute;
-                if (messageID != null)
+                if (messageID != null && imageStore.equals(MediaLoader.IMAGE_STORE_UPLOADS))
                     apiRoute = appContext.getString(R.string.online_image_message_route);
+                else if (messageID != null && imageStore.equals(MediaLoader.IMAGE_STORE_UPLOADS))
+                    apiRoute = appContext.getString(R.string.online_image_user_avatar_route);
                 else
                     apiRoute = appContext.getString(R.string.online_core_image_route);
                 if (thumbSize != null) {
@@ -337,7 +359,7 @@ public class MediaLoader {
                 file = downloadImageFromServer(
                     apiRoute,
                     messageID != null
-                        ? IMAGE_STORE_UPLOADS
+                        ? imageStore
                         : thumbSize == null
                             ? IMAGE_STORE_CORE_IMAGE
                             : IMAGE_STORE_CORE_IMAGE_THUMB
