@@ -43,7 +43,15 @@ public class LocationImageProvider {
        getLocationObjectImages(location, null, context);
     }
 
+    public static void getLocationImages(Location location, String distance, Context context) {
+        getLocationObjectImages(location, null, distance, context);
+    }
+
     public static void getLocationObjectImages(Location location, String description, Context context) {
+       getLocationObjectImages(location, description, "30000km", context);
+    }
+
+    public static void getLocationObjectImages(Location location, String description, String distance, Context context) {
         Log.d("LocationProvider", "Search with object: " + description);
         JSONObject data = new JSONObject();
         try {
@@ -52,6 +60,7 @@ public class LocationImageProvider {
                 data.put("lat", location.getLatitude());
                 data.put("lon", location.getLongitude());
             }
+            data.put("distance", distance);
             data.put("classifier", description);
 
             QMessage message = new QMessage(

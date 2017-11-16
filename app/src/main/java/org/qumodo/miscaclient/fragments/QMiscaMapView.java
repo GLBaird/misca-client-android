@@ -13,6 +13,7 @@ import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
@@ -21,14 +22,21 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
+import com.google.android.gms.common.GooglePlayServicesRepairableException;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.places.AutocompleteFilter;
+import com.google.android.gms.location.places.Place;
+import com.google.android.gms.location.places.ui.PlaceAutocomplete;
+import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.maps.android.clustering.Cluster;
@@ -45,14 +53,16 @@ import org.qumodo.miscaclient.renderers.MapClusterRenderer;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * A simple {@link Fragment} subclass.
  */
 public class QMiscaMapView extends Fragment implements OnMapReadyCallback,
         LocationImageProvider.LocationImageProviderListener, ClusterManager.OnClusterClickListener<MiscaImage>,
-        ClusterManager.OnClusterItemClickListener<MiscaImage>, TextView.OnEditorActionListener {
+        ClusterManager.OnClusterItemClickListener<MiscaImage>, TextView.OnEditorActionListener, GoogleMap.OnCameraIdleListener, View.OnClickListener, View.OnTouchListener {
 
     private Location userLocation;
     private GoogleApiClient googleApiClient;
@@ -61,6 +71,8 @@ public class QMiscaMapView extends Fragment implements OnMapReadyCallback,
     private ClusterManager<MiscaImage> clusterManager;
     private ImageButton mapMode;
     private EditText searchBox;
+    private float zoom = 15f;
+    private View searchButtons;
 
     public QMiscaMapView() {
         // Required empty public constructor
@@ -75,6 +87,10 @@ public class QMiscaMapView extends Fragment implements OnMapReadyCallback,
         }
     }
 
+    public boolean hasLocation() {
+        return userLocation != null;
+    }
+
     private LatLng getLocationPosition() {
         if (userLocation != null) {
             return new LatLng(userLocation.getLatitude(), userLocation.getLongitude());
@@ -83,37 +99,27 @@ public class QMiscaMapView extends Fragment implements OnMapReadyCallback,
         return null;
     }
 
-    private MarkerOptions getUserPositionMarkerOptions(LatLng position) {
-        return new MarkerOptions()
-                .position(position)
-                .icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_my_location))
-                .anchor(0.5f, 0.5f)
-                .title("User position");
-    }
-
-    Marker currentUserPosition;
 
     private void updatePositionOnMap() {
+        Log.d("MAP", "Checking update pos");
         if (!waitForMap) {
+            Log.d("MAP", "UPDAT POS NOW");
             LatLng location = getLocationPosition();
             if (googleMap != null && location != null) {
-                googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(location, 15));
-            }
-            if (userLocation != null && searchTerm == null) {
-                LocationImageProvider.getLocationImages(userLocation, getContext());
-            } else if (userLocation != null) {
-                LocationImageProvider.getLocationObjectImages(userLocation, searchTerm, getContext());
+                googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(location, zoom));
             }
         }
     }
 
     ClusterRenderer<MiscaImage> clusterRenderer;
+    Collection<MiscaImage> clusterItems = new ArrayList<>();
 
     private void setupClusterManager(GoogleMap map) {
         clusterManager = new ClusterManager<>(getContext(), map);
         clusterManager.setAnimation(true);
         clusterManager.setOnClusterClickListener(this);
         clusterManager.setOnClusterItemClickListener(this);
+        clusterManager.addItems(clusterItems);
         clusterRenderer = new MapClusterRenderer(getContext(), googleMap, clusterManager);
         map.setOnCameraIdleListener(clusterManager);
         map.setOnMarkerClickListener(clusterManager);
@@ -155,6 +161,12 @@ public class QMiscaMapView extends Fragment implements OnMapReadyCallback,
 
         searchBox = view.findViewById(R.id.et_object_search);
         searchBox.setOnEditorActionListener(this);
+        searchBox.setOnTouchListener(this);
+
+        searchButtons = view.findViewById(R.id.search_buttons);
+
+        view.findViewById(R.id.button_object_search).setOnClickListener(this);
+        view.findViewById(R.id.button_place_search).setOnClickListener(this);
 
         final ActionBar ab = getActivity().getActionBar();
         if (ab != null) {
@@ -167,6 +179,7 @@ public class QMiscaMapView extends Fragment implements OnMapReadyCallback,
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
+        Log.d("MAP", "MAP LOADED");
         waitForMap = false;
         this.googleMap = googleMap;
         if (ActivityCompat.checkSelfPermission(getContext(),
@@ -192,15 +205,25 @@ public class QMiscaMapView extends Fragment implements OnMapReadyCallback,
         }
 
         setupClusterManager(googleMap);
-        if (userLocation != null) {
-            updatePositionOnMap();
-        }
+        googleMap.setOnCameraIdleListener(this);
+
+        updatePositionOnMap();
     }
 
     @Override
     public void locationImageProviderHasUpdatedWithData() {
-        clusterManager.clearItems();
-        clusterManager.addItems(LocationImageProvider.ITEMS);
+
+        Collection<MiscaImage> items =  clusterManager.getAlgorithm().getItems();
+        Map<String, MiscaImage> newItems = new HashMap<>(LocationImageProvider.ITEMS_MAP);
+
+        for (MiscaImage item : items) {
+            if (newItems.containsKey(item.getId())) {
+                newItems.remove(item.getId());
+            } else {
+                clusterManager.getAlgorithm().removeItem(item);
+            }
+        }
+        clusterManager.getAlgorithm().addItems(newItems.values());
         clusterManager.cluster();
     }
 
@@ -209,15 +232,24 @@ public class QMiscaMapView extends Fragment implements OnMapReadyCallback,
     @Override
     public void onDetach() {
         super.onDetach();
-        currentUserPosition = null;
         googleMap = null;
         waitForMap = true;
+        LocationImageProvider.removeListener(this);
     }
 
     @Override
-    public void onDestroy() {
-        LocationImageProvider.removeListener(this);
-        super.onDestroy();
+    public void onStart() {
+        super.onStart();
+
+    }
+
+    @Override
+    public void onStop() {
+        userLocation = getCameraLocation();
+        zoom = googleMap.getCameraPosition().zoom;
+        clusterItems = clusterManager.getAlgorithm().getItems();
+        Log.d("MAP", "STOP");
+        super.onStop();
     }
 
     @Override
@@ -256,10 +288,10 @@ public class QMiscaMapView extends Fragment implements OnMapReadyCallback,
         //Find the currently focused view, so we can grab the correct window token from it.
         View view = activity.getCurrentFocus();
         //If no view currently has focus, create a new one, just so we can grab a window token from it
-        if (view == null) {
+        if (view == null)
             view = new View(activity);
-        }
-        imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+        if (imm != null)
+            imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
     }
 
     String searchTerm;
@@ -270,11 +302,108 @@ public class QMiscaMapView extends Fragment implements OnMapReadyCallback,
             searchBox.clearFocus();
             hideKeyboard(getActivity());
             searchTerm = searchBox.getText().toString();
-            LocationImageProvider.getLocationObjectImages(userLocation, searchTerm, getContext());
+            LocationImageProvider.getLocationObjectImages(getCameraLocation(), searchTerm, getCameraDistance(), getContext());
             return true;
         }
 
         return false;
     }
 
+    private Location getCameraLocation() {
+        LatLng position = googleMap.getCameraPosition().target;
+        Location cameraLocation = new Location("");
+        cameraLocation.setLatitude(position.latitude);
+        cameraLocation.setLongitude(position.longitude);
+        return cameraLocation;
+    }
+
+    private String getCameraDistance() {
+        LatLngBounds bounds = googleMap.getProjection().getVisibleRegion().latLngBounds;
+        LatLng ne = bounds.northeast;
+        LatLng sw = bounds.southwest;
+
+        Location locationA = new Location("point A");
+        locationA.setLatitude(ne.latitude);
+        locationA.setLongitude(ne.longitude);
+
+        Location locationB = new Location("point B");
+        locationB.setLatitude(sw.latitude);
+        locationB.setLongitude(sw.longitude);
+
+        float distance = locationA.distanceTo(locationB);
+
+        return distance + "m";
+    }
+
+    @Override
+    public void onCameraIdle() {
+        Log.d("MAP", "Camera IDLE Zoom " + googleMap.getCameraPosition().zoom);
+        userLocation = getCameraLocation();
+        String distance = getCameraDistance();
+       if (searchTerm != null) {
+           LocationImageProvider.getLocationObjectImages(userLocation, searchTerm, distance, getContext());
+       } else {
+           LocationImageProvider.getLocationImages(userLocation, distance, getContext());
+       }
+    }
+
+    private void openPlaceSearch() {
+        Intent openPlaceSearch = new Intent();
+        openPlaceSearch.setAction(MainActivity.ACTION_SHOW_PLACE_SEARCH);
+        getContext().sendBroadcast(openPlaceSearch);
+    }
+
+    Marker currentPlace;
+
+    public void addPlaceSearchResult(Place place) {
+        Log.d("MAP", "Place found " + place.getName());
+        if (currentPlace != null) {
+            currentPlace.remove();
+        }
+
+        String title = "Result";
+        CharSequence name = place.getName();
+        if (name != null)
+            title = name.toString();
+
+        MarkerOptions options = new MarkerOptions().position(place.getLatLng()).title(title);
+        currentPlace = googleMap.addMarker(options);
+        currentPlace.showInfoWindow();
+        googleMap.moveCamera(CameraUpdateFactory.newLatLngBounds(place.getViewport(), 1));
+    }
+
+    @Override
+    public void onClick(View view) {
+        switch (view.getId()) {
+            case R.id.button_object_search:
+                searchButtons.setVisibility(View.GONE);
+                searchBox.setText("");
+                searchBox.setVisibility(View.VISIBLE);
+                break;
+            case R.id.button_place_search:
+                openPlaceSearch();
+                break;
+        }
+    }
+
+    @Override
+    public boolean onTouch(View view, MotionEvent motionEvent) {
+        if (view instanceof EditText) {
+            final int DRAWABLE_LEFT = 0;
+            final int DRAWABLE_TOP = 1;
+            final int DRAWABLE_RIGHT = 2;
+            final int DRAWABLE_BOTTOM = 3;
+
+            if (motionEvent.getAction() == MotionEvent.ACTION_UP) {
+                if (motionEvent.getRawX() >= (searchBox.getRight() - searchBox.getCompoundDrawables()[DRAWABLE_RIGHT].getBounds().width())) {
+                    searchTerm = null;
+                    searchBox.setVisibility(View.INVISIBLE);
+                    searchButtons.setVisibility(View.VISIBLE);
+                    LocationImageProvider.getLocationImages(getCameraLocation(), getCameraDistance(), getContext());
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 }

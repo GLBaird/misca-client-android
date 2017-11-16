@@ -30,10 +30,15 @@ import android.widget.ImageButton;
 import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
+import com.google.android.gms.common.GooglePlayServicesRepairableException;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.places.AutocompleteFilter;
+import com.google.android.gms.location.places.Place;
+import com.google.android.gms.location.places.ui.PlaceAutocomplete;
 import com.theartofdev.edmodo.cropper.CropImage;
 import com.theartofdev.edmodo.cropper.CropImageView;
 
@@ -80,10 +85,12 @@ public class MainActivity extends Activity implements QMiscaGroupsListFragment.O
     private static final int REQUEST_IMAGE_CAPTURE = 1;
     private static final int REQUEST_IMAGE_GALLERY = 2;
     private static final int REQUEST_CHECK_SETTINGS = 3;
+    public static final int PLACE_AUTOCOMPLETE_REQUEST_CODE = 4;
 
     public static final String ACTION_SHOW_IMAGE_GALLERY = "org.qumodo.miscaclient.MainActivity.action.ShowImageGallery";
     public static final String ACTION_SHOW_IMAGE_VIEW = "org.qumodo.miscaclient.MainActivity.action.ShowImageView";
     public static final String ACTION_OBJECT_SEARCH_RESULTS = "org.qumodo.miscaclient.MainActivity.action.ObjectSearchResults";
+    public static final String ACTION_SHOW_PLACE_SEARCH = "org.qumodo.miscaclient.MainActivity.action.ShowPlaceSearch";
 
     private ImageButton chatModeButton;
     private ImageButton objectModeButton;
@@ -113,6 +120,7 @@ public class MainActivity extends Activity implements QMiscaGroupsListFragment.O
                 case ACTION_SHOW_IMAGE_GALLERY:
                     onOpenImageListIntent();
                     break;
+
                 case ACTION_SHOW_IMAGE_VIEW:
                     String pathName = intent.getStringExtra(QImageViewFragment.INTENT_IMAGE_PATH);
                     String imageID = intent.getStringExtra(QImageViewFragment.INTENT_IMAGE_ID);
@@ -121,12 +129,17 @@ public class MainActivity extends Activity implements QMiscaGroupsListFragment.O
                         onOpenImagePreviewIntent(pathName, service, imageID);
                     }
                     break;
+
                 case QTCPSocketService.DELEGATE_SOCKET_CLOSED:
                     Intent startupActivity = new Intent(MainActivity.this, StartupActivity.class);
                     startupActivity.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
                     startActivity(startupActivity);
 
                     finish();
+                    break;
+
+                case ACTION_SHOW_PLACE_SEARCH:
+                    openPlaceSearch();
                     break;
             }
         }
@@ -201,6 +214,7 @@ public class MainActivity extends Activity implements QMiscaGroupsListFragment.O
         actions.addAction(ACTION_SHOW_IMAGE_GALLERY);
         actions.addAction(ACTION_SHOW_IMAGE_VIEW);
         actions.addAction(ACTION_OBJECT_SEARCH_RESULTS);
+        actions.addAction(ACTION_SHOW_PLACE_SEARCH);
         actions.addAction(QTCPSocketService.DELEGATE_SOCKET_CLOSED);
         registerReceiver(receiver, actions);
         Log.d(TAG, "Intent receiver registered");
@@ -323,7 +337,7 @@ public class MainActivity extends Activity implements QMiscaGroupsListFragment.O
 
     @Override
     public void onOpenCameraIntent(String message) {
-        LocationProvider.getSharedLocationProvider().updateLocation(this);
+        LocationProvider.getSharedLocationProvider().updateLocation(this, true);
         newImageID = UUID.randomUUID().toString();
         messageTextForCaption = message;
         File imageFile = MediaLoader.getImageFile(
@@ -344,7 +358,7 @@ public class MainActivity extends Activity implements QMiscaGroupsListFragment.O
 
     @Override
     public void onOpenImageGalleryIntent(String caption) {
-        LocationProvider.getSharedLocationProvider().updateLocation(this);
+        LocationProvider.getSharedLocationProvider().updateLocation(this, true);
         messageTextForCaption = caption;
         Intent intent = new Intent();
         intent.setType("image/*");
@@ -362,6 +376,7 @@ public class MainActivity extends Activity implements QMiscaGroupsListFragment.O
                 .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
                 .addToBackStack(QMiscaGroupsListFragment.TAG)
                 .commit();
+        actionBar.setDisplayHomeAsUpEnabled(true);
     }
 
     private void onOpenImagePreviewIntent(String path, int service, String imageID) {
@@ -398,11 +413,36 @@ public class MainActivity extends Activity implements QMiscaGroupsListFragment.O
                 .commit();
     }
 
+    private void openPlaceSearch() {
+        AutocompleteFilter filter = new AutocompleteFilter.Builder()
+                .setTypeFilter(
+                        AutocompleteFilter.TYPE_FILTER_ADDRESS
+                                | AutocompleteFilter.TYPE_FILTER_CITIES
+                                | AutocompleteFilter.TYPE_FILTER_ESTABLISHMENT
+                                | AutocompleteFilter.TYPE_FILTER_REGIONS
+                ).build();
+        try {
+            Intent intent =
+                    new PlaceAutocomplete.IntentBuilder(PlaceAutocomplete.MODE_FULLSCREEN)
+                            .setFilter(filter)
+                            .build(this);
+            startActivityForResult(intent, PLACE_AUTOCOMPLETE_REQUEST_CODE);
+        } catch (GooglePlayServicesRepairableException e) {
+            e.printStackTrace();
+            Toast.makeText(this,
+                    "Error with Play Services", Toast.LENGTH_SHORT).show();
+        } catch (GooglePlayServicesNotAvailableException e) {
+            e.printStackTrace();
+            Toast.makeText(this,
+                    "Error, Play Services not available.", Toast.LENGTH_SHORT).show();
+        }
+    }
+
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-
+        Log.d("MAP", "Activity result IN!");
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
             storeAndSendImageToMessageList();
         } else if (requestCode == REQUEST_IMAGE_GALLERY && resultCode == RESULT_OK && data != null) {
@@ -414,6 +454,12 @@ public class MainActivity extends Activity implements QMiscaGroupsListFragment.O
             } else if (resultCode == CropImage.CROP_IMAGE_ACTIVITY_RESULT_ERROR_CODE) {
                 Exception error = result.getError();
                 Log.d(TAG, "Error with crop " + error);
+            }
+        } else if (requestCode == PLACE_AUTOCOMPLETE_REQUEST_CODE && resultCode == RESULT_OK) {
+            Log.d("MAP", "Activity result");
+            if (mMapView != null) {
+                Place place = PlaceAutocomplete.getPlace(this, data);
+                mMapView.addPlaceSearchResult(place);
             }
         }
 
@@ -627,7 +673,7 @@ public class MainActivity extends Activity implements QMiscaGroupsListFragment.O
                     == PackageManager.PERMISSION_GRANTED
         ) {
             userLocation =  LocationServices.FusedLocationApi.getLastLocation(googleApiClient);
-            if (mMapView != null) {
+            if (mMapView != null && (!mMapView.hasLocation() || currentMode != R.id.mode_view_map_button)) {
                 mMapView.updateMapView(userLocation, googleApiClient);
             }
             LocationRequest locationRequest = new LocationRequest();
@@ -637,7 +683,7 @@ public class MainActivity extends Activity implements QMiscaGroupsListFragment.O
 
             LocationServices.FusedLocationApi.requestLocationUpdates(
                     googleApiClient, locationRequest, this);
-        } else if (userLocation != null && mMapView != null) {
+        } else if (userLocation != null && mMapView != null && (!mMapView.hasLocation() || currentMode != R.id.mode_view_map_button)) {
             mMapView.updateMapView(userLocation, googleApiClient);
         }
     }
@@ -665,7 +711,7 @@ public class MainActivity extends Activity implements QMiscaGroupsListFragment.O
     public void onLocationChanged(Location location) {
         userLocation = location;
         LocationServices.FusedLocationApi.removeLocationUpdates(googleApiClient, this);
-        if (mMapView != null) {
+        if (mMapView != null && (!mMapView.hasLocation() || currentMode != R.id.mode_view_map_button)) {
             mMapView.updateMapView(userLocation, googleApiClient);
         }
     }

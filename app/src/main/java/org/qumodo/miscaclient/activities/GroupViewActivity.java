@@ -193,7 +193,7 @@ public class GroupViewActivity extends Activity implements MessageListFragment.O
 
     @Override
     public void onOpenCameraIntent(String message) {
-        LocationProvider.getSharedLocationProvider().updateLocation(this);
+        LocationProvider.getSharedLocationProvider().updateLocation(this, true);
         newImageID = UUID.randomUUID().toString();
         messageTextForCaption = message;
         File imageFile = MediaLoader.getImageFile(
@@ -214,7 +214,7 @@ public class GroupViewActivity extends Activity implements MessageListFragment.O
 
     @Override
     public void onOpenImageGalleryIntent(String caption) {
-        LocationProvider.getSharedLocationProvider().updateLocation(this);
+        LocationProvider.getSharedLocationProvider().updateLocation(this, true);
         messageTextForCaption = caption;
         Intent intent = new Intent();
         intent.setType("image/*");
@@ -288,7 +288,7 @@ public class GroupViewActivity extends Activity implements MessageListFragment.O
 
     @Override
     public void onConnected(@Nullable Bundle bundle) {
-        LocationProvider.getSharedLocationProvider().updateLocation(this);
+        LocationProvider.getSharedLocationProvider().updateLocation(this, true);
     }
 
     @Override
