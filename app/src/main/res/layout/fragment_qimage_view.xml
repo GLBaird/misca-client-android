@@ -5,12 +5,10 @@
     android:background="@color/colorBlack"
     tools:context="org.qumodo.miscaclient.fragments.QImageViewFragment">
 
-    <ImageView
+    <com.github.chrisbanes.photoview.PhotoView
         android:id="@+id/image_view"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:adjustViewBounds="true"
-        android:scaleType="fitCenter" />
+        android:layout_height="match_parent" />
 
     <ProgressBar
         android:id="@+id/spinner"

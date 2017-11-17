@@ -5,15 +5,10 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
-import android.graphics.Path;
-import android.graphics.PorterDuff;
-import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
-import android.util.AttributeSet;
 import android.support.v7.widget.AppCompatImageView;
-import android.util.Log;
+import android.util.AttributeSet;
 
-import org.qumodo.data.MediaLoader;
 import org.qumodo.miscaclient.R;
 
 public class QMiscaListSquareImageView extends AppCompatImageView {

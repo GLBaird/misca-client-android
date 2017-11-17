@@ -35,13 +35,13 @@ public class MiscaWorkflowGenerator {
                 "start_search", "Would you like to search\u00A0for:", new Question[]{
                     new Question("Face", "face_detect_start"),
                     new Question("Object", "crop_image_question"),
-                    new Question("Number plate?", "anpr_start")
+                    new Question("Number plate", "anpr_start")
         }));
 
         workflow.put("crop_image_question", new MiscaWorkflowQuestion(
                 "crop_image_question", "Would you like to crop the image to\u00A0the\u00A0object?", new Question[]{
-                new Question("Yes", "object_detection_crop"),
-                new Question("No", "object_detection")
+                new Question("No", "object_detection"),
+                new Question("Yes", "object_detection_crop")
         }));
 
         workflow.put("object_detection", new MiscaWorkflowCommand(

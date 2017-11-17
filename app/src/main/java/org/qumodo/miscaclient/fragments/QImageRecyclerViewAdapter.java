@@ -44,7 +44,6 @@ public class QImageRecyclerViewAdapter extends RecyclerView.Adapter<QImageRecycl
     @Override
     public void onBindViewHolder(final ViewHolder holder, int position) {
         holder.mItem = mValues.get(position);
-        holder.mClassifierView.setText(mValues.get(position).getClassifier());
         holder.mImageView.setImageBitmap(null);
         holder.mSpinner.setVisibility(View.VISIBLE);
 
@@ -86,7 +85,6 @@ public class QImageRecyclerViewAdapter extends RecyclerView.Adapter<QImageRecycl
         public final View mView;
         public final ImageView mImageView;
         public final ProgressBar mSpinner;
-        public final TextView mClassifierView;
         public MiscaImage mItem;
 
         public ViewHolder(View view) {
@@ -94,12 +92,11 @@ public class QImageRecyclerViewAdapter extends RecyclerView.Adapter<QImageRecycl
             mView = view;
             mImageView = view.findViewById(R.id.image_view);
             mSpinner = view.findViewById(R.id.spinner);
-            mClassifierView = view.findViewById(R.id.image_classifier);
         }
 
         @Override
         public String toString() {
-            return super.toString() + " '" + mClassifierView.getText() + "'";
+            return super.toString() + " '" + mItem.getClassifier() + "'";
         }
     }
 }

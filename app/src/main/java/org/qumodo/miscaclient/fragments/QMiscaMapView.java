@@ -2,6 +2,7 @@ package org.qumodo.miscaclient.fragments;
 
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.ActionBar;
 import android.app.Activity;
 import android.app.Fragment;
@@ -386,6 +387,7 @@ public class QMiscaMapView extends Fragment implements OnMapReadyCallback,
         }
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     @Override
     public boolean onTouch(View view, MotionEvent motionEvent) {
         if (view instanceof EditText) {

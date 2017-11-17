@@ -368,7 +368,7 @@ public class MainActivity extends Activity implements QMiscaGroupsListFragment.O
 
     private void onOpenImageListIntent() {
         Log.d(TAG, "onOpenImageListIntent");
-        Fragment fragment = QImageListFragment.newInstance(3);
+        Fragment fragment = QImageListFragment.newInstance(4);
         fragment.setRetainInstance(true);
         getFragmentManager()
                 .beginTransaction()
@@ -442,7 +442,6 @@ public class MainActivity extends Activity implements QMiscaGroupsListFragment.O
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        Log.d("MAP", "Activity result IN!");
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
             storeAndSendImageToMessageList();
         } else if (requestCode == REQUEST_IMAGE_GALLERY && resultCode == RESULT_OK && data != null) {
@@ -456,7 +455,6 @@ public class MainActivity extends Activity implements QMiscaGroupsListFragment.O
                 Log.d(TAG, "Error with crop " + error);
             }
         } else if (requestCode == PLACE_AUTOCOMPLETE_REQUEST_CODE && resultCode == RESULT_OK) {
-            Log.d("MAP", "Activity result");
             if (mMapView != null) {
                 Place place = PlaceAutocomplete.getPlace(this, data);
                 mMapView.addPlaceSearchResult(place);
