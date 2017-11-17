@@ -102,9 +102,7 @@ public class QMiscaMapView extends Fragment implements OnMapReadyCallback,
 
 
     private void updatePositionOnMap() {
-        Log.d("MAP", "Checking update pos");
         if (!waitForMap) {
-            Log.d("MAP", "UPDAT POS NOW");
             LatLng location = getLocationPosition();
             if (googleMap != null && location != null) {
                 googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(location, zoom));
@@ -213,19 +211,24 @@ public class QMiscaMapView extends Fragment implements OnMapReadyCallback,
 
     @Override
     public void locationImageProviderHasUpdatedWithData() {
+        Log.d("MAP", "New items - " + clusterManager.getAlgorithm().getItems().size());
 
-        Collection<MiscaImage> items =  clusterManager.getAlgorithm().getItems();
-        Map<String, MiscaImage> newItems = new HashMap<>(LocationImageProvider.ITEMS_MAP);
+        if (LocationImageProvider.ITEMS.size() > 0) {
+            Collection<MiscaImage> items = clusterManager.getAlgorithm().getItems();
+            Map<String, MiscaImage> newItems = new HashMap<>(LocationImageProvider.ITEMS_MAP);
 
-        for (MiscaImage item : items) {
-            if (newItems.containsKey(item.getId())) {
-                newItems.remove(item.getId());
-            } else {
-                clusterManager.getAlgorithm().removeItem(item);
+
+            for (MiscaImage item : items) {
+                if (newItems.containsKey(item.getId())) {
+                    newItems.remove(item.getId());
+                } else if (clusterManager.getAlgorithm().getItems().size() > 1000) {
+                    clusterManager.getAlgorithm().removeItem(item);
+                }
             }
+            clusterManager.getAlgorithm().addItems(newItems.values());
+
+            clusterManager.cluster();
         }
-        clusterManager.getAlgorithm().addItems(newItems.values());
-        clusterManager.cluster();
     }
 
     private boolean waitForMap = false;
@@ -241,6 +244,11 @@ public class QMiscaMapView extends Fragment implements OnMapReadyCallback,
     @Override
     public void onStart() {
         super.onStart();
+        if (searchTerm != null) {
+            searchButtons.setVisibility(View.GONE);
+            searchBox.setVisibility(View.VISIBLE);
+            searchBox.setEnabled(true);
+        }
 
     }
 
@@ -303,6 +311,7 @@ public class QMiscaMapView extends Fragment implements OnMapReadyCallback,
             searchBox.clearFocus();
             hideKeyboard(getActivity());
             searchTerm = searchBox.getText().toString();
+            clusterManager.clearItems();
             LocationImageProvider.getLocationObjectImages(getCameraLocation(), searchTerm, getCameraDistance(), getContext());
             return true;
         }
@@ -333,7 +342,7 @@ public class QMiscaMapView extends Fragment implements OnMapReadyCallback,
 
         float distance = locationA.distanceTo(locationB);
 
-        return distance + "m";
+        return Math.round(distance * 1.2) + "m";
     }
 
     @Override
@@ -380,6 +389,7 @@ public class QMiscaMapView extends Fragment implements OnMapReadyCallback,
                 searchButtons.setVisibility(View.GONE);
                 searchBox.setText("");
                 searchBox.setVisibility(View.VISIBLE);
+                searchBox.setEnabled(true);
                 break;
             case R.id.button_place_search:
                 openPlaceSearch();
@@ -401,6 +411,8 @@ public class QMiscaMapView extends Fragment implements OnMapReadyCallback,
                     searchTerm = null;
                     searchBox.setVisibility(View.INVISIBLE);
                     searchButtons.setVisibility(View.VISIBLE);
+                    searchBox.setText("");
+                    searchBox.setEnabled(false);
                     LocationImageProvider.getLocationImages(getCameraLocation(), getCameraDistance(), getContext());
                     return true;
                 }

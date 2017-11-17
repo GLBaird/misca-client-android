@@ -53,7 +53,7 @@ public class MapClusterRenderer extends DefaultClusterRenderer<MiscaImage> {
                     @Override
                     public void onResourceReady(Bitmap resource, Transition<? super Bitmap> transition) {
                         Marker activeMarker = getMarker(clusterItem);
-                        if (activeMarker != null) {
+                        if (activeMarker != null && resource != null) {
                             activeMarker.setIcon(BitmapDescriptorFactory.fromBitmap(resource));
                         }
                     }
