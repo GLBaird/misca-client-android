@@ -115,12 +115,19 @@ public class MiscaResponseController {
     private void sendMessageData(Context context, String command, String groupID, JSONObject item) throws JSONException {
         String image = item.has("image") ? item.getString("image") : null;
         Log.d("RESP", "Misca Image " + image);
-        if (image != null) {
+        if (image != null && !command.equals(SocketCommands.MISCA_ANPR_SEARCH)) {
             sendMiscaImage(groupID, image, context);
         }
         String responseMessage = getResultText(command, item);
         Log.d("RESP", "Response message " + responseMessage);
         sendMessage(groupID, responseMessage, context);
+
+        if (command.equals(SocketCommands.MISCA_ANPR_SEARCH)) {
+            DataManager dm = new DataManager(context);
+            Message question = dm.addNewMessage("anpr_extra_question::" + item.getString("plate"), QMessageType.MISCA_QUESTION, groupID, null, UserSettingsManager.getMiscaID(), null);
+            MessageContentProvider.addItem(question);
+            updateUI(context);
+        }
     }
 
 
@@ -157,7 +164,15 @@ public class MiscaResponseController {
                 return "Information for plate " + plate + ":\n" + description;
             } catch (JSONException e) {
                 e.printStackTrace();
-                return "Error, failed to extract object data from response";
+                return "Error, failed to extract ANPR data from response";
+            }
+        } else if (command.equals(SocketCommands.MISCA_ANPR_SEARCH_EXTRA)) {
+            try {
+                String description = data.getString("additionalDetails");
+                return "Further information:\n" + description;
+            } catch (JSONException e) {
+                e.printStackTrace();
+                return "No additional data found.";
             }
         }
 

@@ -4,7 +4,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.icu.text.StringSearch;
 import android.support.annotation.Nullable;
 import android.util.Log;
 import android.widget.Toast;
@@ -19,18 +18,14 @@ import org.qumodo.miscaclient.dataProviders.MessageContentProvider;
 import org.qumodo.miscaclient.dataProviders.UserSettingsManager;
 import org.qumodo.miscaclient.fragments.ObjectSearchFragment;
 import org.qumodo.network.QMessage;
-import org.qumodo.services.QTCPSocketService;
 import org.qumodo.network.QMessageType;
+import org.qumodo.services.QTCPSocketService;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
-import java.net.URLEncoder;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.List;
 
 public class MessageCenter {
 
@@ -49,6 +44,8 @@ public class MessageCenter {
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
             String message;
+            if (action == null)
+                return;
 
             switch (action) {
                 case QTCPSocketService.DELEGATE_RECEIVED_MESSAGE:
@@ -134,7 +131,7 @@ public class MessageCenter {
 
     private void parseTextMessage(QMessage message) {
         try {
-            String messageText = null;
+            String messageText;
             try {
                 messageText = URLDecoder.decode(message.data.getString(QMessage.KEY_MESSAGE), "UTF-8");
             } catch (UnsupportedEncodingException e) {
@@ -178,7 +175,7 @@ public class MessageCenter {
     }
 
     private void parseMiscaQuestion(QMessage message) {
-
+        Log.d(TAG, "parseMiscaQuestion: " + message.toString());
     }
 
     private void parseMiscaResponse(QMessage message) {
@@ -213,6 +210,7 @@ public class MessageCenter {
         }
     }
 
+    @SuppressWarnings("unused")
     private void reportError(String message) {
         QMessage parsed = parseMessage(message);
         if (parsed != null) {

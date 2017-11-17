@@ -37,14 +37,14 @@ public class MiscaCommandRunner {
     private Context context;
     private MiscaWorkflowCommands command;
     private DataManager dm;
-    private String imageID;
+    private String referenceID;
     private String groupID;
 
-    private MiscaCommandRunner(Context context, String imageID, String groupID,
+    private MiscaCommandRunner(Context context, String referenceID, String groupID,
                                MiscaWorkflowCommands command, DataManager dm) {
         this.context = context;
         this.command = command;
-        this.imageID = imageID;
+        this.referenceID = referenceID;
         this.groupID = groupID;
         this.dm = dm;
     }
@@ -79,6 +79,9 @@ public class MiscaCommandRunner {
             case NUMBER_PLATE_DETECTION:
                 runNumberPlateDetection();
                 break;
+            case NUMBER_PLATE_DETECTION_EXTRA:
+                runNumberPlateDetectionExtra();
+                break;
             case FACE_DETECTION:
                 runFaceDetection();
                 break;
@@ -90,7 +93,7 @@ public class MiscaCommandRunner {
 
     private void runObjectDetectionCrop() {
         Toast.makeText(context, "Object Detection Crop", Toast.LENGTH_SHORT).show();
-        CropImage.activity(MediaLoader.getImageURI(imageID, MediaLoader.IMAGE_STORE_UPLOADS, context))
+        CropImage.activity(MediaLoader.getImageURI(referenceID, MediaLoader.IMAGE_STORE_UPLOADS, context))
                 .setAllowRotation(true)
                 .setActivityTitle("Crop to object")
                 .start((Activity) context);
@@ -104,7 +107,7 @@ public class MiscaCommandRunner {
     }
 
     private void runObjectDetection() {
-        EnrichmentData data = DataEnrichmentProvider.getProvider().getDataWithID(imageID);
+        EnrichmentData data = DataEnrichmentProvider.getProvider().getDataWithID(referenceID);
         if (data != null) {
             processObjectDetectionData(data);
         } else {
@@ -119,7 +122,7 @@ public class MiscaCommandRunner {
                 }
             };
             timer.start();
-            DataEnrichmentProvider.getProvider().addListener(imageID,
+            DataEnrichmentProvider.getProvider().addListener(referenceID,
                     new DataEnrichmentProvider.DataEnrichmentListener() {
                 @Override
                 public void enrichmentDataReady(EnrichmentData data) {
@@ -174,7 +177,7 @@ public class MiscaCommandRunner {
     }
 
     private void runNumberPlateDetection() {
-        EnrichmentData data = DataEnrichmentProvider.getProvider().getDataWithID(imageID);
+        EnrichmentData data = DataEnrichmentProvider.getProvider().getDataWithID(referenceID);
         if (data != null) {
             processANPRData(data);
         } else {
@@ -190,7 +193,7 @@ public class MiscaCommandRunner {
                 }
             };
             timer.start();
-            DataEnrichmentProvider.getProvider().addListener(imageID,
+            DataEnrichmentProvider.getProvider().addListener(referenceID,
                     new DataEnrichmentProvider.DataEnrichmentListener() {
                         @Override
                         public void enrichmentDataReady(EnrichmentData data) {
@@ -198,6 +201,31 @@ public class MiscaCommandRunner {
                             processANPRData(data);
                         }
                     });
+        }
+    }
+
+    private void runNumberPlateDetectionExtra() {
+        addMiscaTextMessage("Searching for data on registered owner of vehicle " + referenceID + ".");
+        try {
+            JSONObject data = new JSONObject();
+            data.put("command", SocketCommands.MISCA_ANPR_SEARCH);
+            data.put("anpr", referenceID);
+            data.put("groupID", groupID);
+            data.put("extraData", true);
+            QMessage message = new QMessage(
+                    UserSettingsManager.getMiscaID(),
+                    UserSettingsManager.getUserID(),
+                    QMessageType.COMMAND,
+                    data
+            );
+
+            Intent sendMessage = new Intent();
+            sendMessage.setAction(QTCPSocketService.ACTION_SEND_MESSAGE);
+            sendMessage.putExtra(QTCPSocketService.INTENT_KEY_MESSAGE, message.serialize());
+            context.sendBroadcast(sendMessage);
+
+        } catch (JSONException e) {
+            e.printStackTrace();
         }
     }
 
@@ -237,7 +265,7 @@ public class MiscaCommandRunner {
     }
 
     private void runFaceDetection() {
-        EnrichmentData data = DataEnrichmentProvider.getProvider().getDataWithID(imageID);
+        EnrichmentData data = DataEnrichmentProvider.getProvider().getDataWithID(referenceID);
         if (data != null) {
             processFaceDetection(data);
         } else {
@@ -254,7 +282,7 @@ public class MiscaCommandRunner {
                 }
             };
             timer.start();
-            DataEnrichmentProvider.getProvider().addListener(imageID,
+            DataEnrichmentProvider.getProvider().addListener(referenceID,
                     new DataEnrichmentProvider.DataEnrichmentListener() {
                         @Override
                         public void enrichmentDataReady(EnrichmentData data) {
@@ -268,7 +296,7 @@ public class MiscaCommandRunner {
     private void processFaceDetection(EnrichmentData data) {
         Rect[] faces = data.getFaces();
         if (faces != null && faces.length > 0) {
-            Message faceMessage = dm.addNewMessage(imageID, QMessageType.MISCA_FACES, groupID,
+            Message faceMessage = dm.addNewMessage(referenceID, QMessageType.MISCA_FACES, groupID,
                     null, UserSettingsManager.getMiscaID(), null);
             addMiscaTextMessage("Found the following faces:");
             MessageContentProvider.addItem(faceMessage);
@@ -286,10 +314,10 @@ public class MiscaCommandRunner {
     }
 
     private void runMiscaQuestionResponse() {
-        Log.d("Command", "com: " + command +", imID: " + imageID);
+        Log.d("Command", "com: " + command +", imID: " + referenceID);
 
-        int objectIndex = Integer.parseInt(imageID.split("::")[0]);
-        String messageID = imageID.split("::")[1];
+        int objectIndex = Integer.parseInt(referenceID.split("::")[0]);
+        String messageID = referenceID.split("::")[1];
         MiscaWorkflowManager.getManager().removeWorkflowStep(messageID);
 
         MiscaResponseController.getController().sendFinalResponse(messageID, context, objectIndex);

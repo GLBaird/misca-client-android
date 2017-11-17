@@ -7,6 +7,7 @@ public class MiscaWorkflowCommand extends MiscaWorkflowStep {
         OBJECT_DETECTION,
         OBJECT_DETECTION_CROP,
         NUMBER_PLATE_DETECTION,
+        NUMBER_PLATE_DETECTION_EXTRA,
         MISCA_RESPONSE_QUESTION,
         DO_NOTHING
     }

@@ -20,6 +20,7 @@ public class ServerDetails {
         public static final String CORE_IMAGE_SEARCH = "core_image_search";
         public static final String MISCA_OBJECT_SEARCH = "misca_object_search";
         public static final String MISCA_ANPR_SEARCH = "misca_anpr_search";
+        public static final String MISCA_ANPR_SEARCH_EXTRA = "misca_anpr_search_extra";
     }
 
     public static void showHostNameDialoge(Context context) {
