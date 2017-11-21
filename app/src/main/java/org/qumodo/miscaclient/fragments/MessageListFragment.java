@@ -212,7 +212,9 @@ public class MessageListFragment extends Fragment implements View.OnClickListene
 
     public void loadNewMessage(Message newMessage) {
         MessageContentProvider.addItem(newMessage);
-        adapter.notifyItemInserted(MessageContentProvider.ITEMS.size() - 1);
+        int position = MessageContentProvider.ITEMS.size() -1;
+        adapter.notifyItemInserted(position);
+        recyclerView.scrollToPosition(position);
     }
 
     @Override

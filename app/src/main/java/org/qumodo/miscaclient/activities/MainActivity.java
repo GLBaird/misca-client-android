@@ -46,6 +46,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.qumodo.data.DataManager;
 import org.qumodo.data.MediaLoader;
+import org.qumodo.data.MessageCenter;
 import org.qumodo.data.models.GroupListItem;
 import org.qumodo.data.models.Message;
 import org.qumodo.data.models.MiscaImage;
@@ -349,6 +350,7 @@ public class MainActivity extends Activity implements QMiscaGroupsListFragment.O
         Uri imageUri = FileProvider.getUriForFile(this, BuildConfig.APPLICATION_ID + ".provider", imageFile);
         Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         cameraIntent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+        cameraIntent.putExtra(MediaStore.EXTRA_SIZE_LIMIT, "1048576");
         cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
 
         if (cameraIntent.resolveActivity(getPackageManager()) != null) {

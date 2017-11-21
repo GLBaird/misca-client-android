@@ -237,7 +237,7 @@ public class MiscaCommandRunner {
             for (String plate : plates) {
                 found.add(plate.split(" ")[0]);
             }
-            addMiscaTextMessage("Number plates found: " + TextUtils.join(", ", found) + ",\nsearching database...");
+            addMiscaTextMessage("Number plates found, searching database...");
             try {
                 JSONObject data = new JSONObject();
                 data.put("command", SocketCommands.MISCA_ANPR_SEARCH);

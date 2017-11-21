@@ -77,7 +77,7 @@ public class ServerDetails {
     }
 
     public static String getSocketHostName() {
-        return UserSettingsManager.getValue(SOCKET_HOSTNAME_KEY, "192.168.0.104");
+        return UserSettingsManager.getValue(SOCKET_HOSTNAME_KEY, "192.168.1.110");
     }
 
     public static int getSocketPortNumber() {
@@ -85,7 +85,7 @@ public class ServerDetails {
     }
 
     public static String getMediaServerHostName() {
-        return UserSettingsManager.getValue(MEDIA_SERVER_HOSTNAME, "http://192.168.0.104");
+        return UserSettingsManager.getValue(MEDIA_SERVER_HOSTNAME, "http://192.168.1.110");
     }
 
     public static String getUserMessageImageHostName(String messageID) {
@@ -93,7 +93,7 @@ public class ServerDetails {
     }
 
     public static String getMiscaImageHostName(String image) {
-        return UserSettingsManager.getValue(MEDIA_SERVER_HOSTNAME, "http://192.168.0.104")
+        return UserSettingsManager.getValue(MEDIA_SERVER_HOSTNAME, "http://192.168.1.110")
                 + ":9800/misca_image/"+image;
     }
 
