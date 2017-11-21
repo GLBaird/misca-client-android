@@ -73,6 +73,7 @@ public class QMiscaMapView extends Fragment implements OnMapReadyCallback,
     private ImageButton mapMode;
     private EditText searchBox;
     private float zoom = 15f;
+    private float previousZoom = 15f;
     private View searchButtons;
 
     public QMiscaMapView() {
@@ -213,22 +214,33 @@ public class QMiscaMapView extends Fragment implements OnMapReadyCallback,
     public void locationImageProviderHasUpdatedWithData() {
         Log.d("MAP", "New items - " + clusterManager.getAlgorithm().getItems().size());
 
-        if (LocationImageProvider.ITEMS.size() > 0) {
-            Collection<MiscaImage> items = clusterManager.getAlgorithm().getItems();
-            Map<String, MiscaImage> newItems = new HashMap<>(LocationImageProvider.ITEMS_MAP);
-
-
-            for (MiscaImage item : items) {
-                if (newItems.containsKey(item.getId())) {
-                    newItems.remove(item.getId());
-                } else if (clusterManager.getAlgorithm().getItems().size() > 1000) {
-                    clusterManager.getAlgorithm().removeItem(item);
-                }
-            }
-            clusterManager.getAlgorithm().addItems(newItems.values());
-
-            clusterManager.cluster();
+        if (LocationImageProvider.ITEMS.size() > 0 && zoom <17f && previousZoom < 17f) {
+            updateCluster();
+        } else if (zoom >= 17f && previousZoom < 17f) {
+            clusterItems = clusterManager.getAlgorithm().getItems();
+            clusterManager.clearItems();
+            clusterManager.addItems(LocationImageProvider.ITEMS);
+        } else if (zoom < 17f && previousZoom >= 17f) {
+            clusterManager.clearItems();
+            clusterManager.addItems(clusterItems);
+            updateCluster();
         }
+
+        clusterManager.cluster();
+        previousZoom = zoom;
+    }
+
+    private void updateCluster() {
+        Collection<MiscaImage> items = clusterManager.getAlgorithm().getItems();
+        Map<String, MiscaImage> newItems = new HashMap<>(LocationImageProvider.ITEMS_MAP);
+
+        for (MiscaImage item : items) {
+            if (newItems.containsKey(item.getId())) {
+                newItems.remove(item.getId());
+            }
+        }
+
+        clusterManager.getAlgorithm().addItems(newItems.values());
     }
 
     private boolean waitForMap = false;
@@ -347,7 +359,9 @@ public class QMiscaMapView extends Fragment implements OnMapReadyCallback,
 
     @Override
     public void onCameraIdle() {
+        clusterManager.cluster();
         Log.d("MAP", "Camera IDLE Zoom " + googleMap.getCameraPosition().zoom);
+        zoom = googleMap.getCameraPosition().zoom;
         userLocation = getCameraLocation();
         String distance = getCameraDistance();
        if (searchTerm != null) {

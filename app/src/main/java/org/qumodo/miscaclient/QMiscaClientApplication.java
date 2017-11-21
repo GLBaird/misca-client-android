@@ -153,6 +153,8 @@ public class QMiscaClientApplication extends Application {
     }
 
     private void startTCPSocket() {
+        hostname = ServerDetails.getSocketHostName();
+        port = ServerDetails.getSocketPortNumber();
         Intent socketService = new Intent(this, QTCPSocketService.class);
         socketService.putExtra(QTCPSocketService.INTENT_KEY_HOSTNAME, hostname);
         socketService.putExtra(QTCPSocketService.INTENT_KEY_PORT, port);

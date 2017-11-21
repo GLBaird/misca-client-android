@@ -408,12 +408,12 @@ public class MessageRecyclerViewAdapter extends RecyclerView.Adapter<MessageRecy
             bindMiscaFaces(holder);
         }
 
-        Animation animation = AnimationUtils.loadAnimation(
-                holder.mView.getContext(),
-                (position > lastPosition)
-                        ? R.anim.up_from_bottom
-                        : R.anim.down_from_top);
-        holder.itemView.startAnimation(animation);
+//        Animation animation = AnimationUtils.loadAnimation(
+//                holder.mView.getContext(),
+//                (position > lastPosition)
+//                        ? R.anim.up_from_bottom
+//                        : R.anim.down_from_top);
+//        holder.itemView.startAnimation(animation);
         lastPosition = position;
     }
 

@@ -30,7 +30,7 @@ public class MapClusterRenderer extends DefaultClusterRenderer<MiscaImage> {
         this.context = context;
         requestOptions = new RequestOptions()
                                 .centerInside()
-                                .override(200, 200)
+                                .override(130, 130)
                                 .circleCrop();
     }
 
