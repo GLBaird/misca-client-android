@@ -157,6 +157,8 @@ public class StartupActivity extends Activity implements View.OnClickListener, Q
             setMenuForID(R.id.action_user_a);
         } else if (userID != null && userID.equals(UserSettingsManager.USER_ID_B)) {
             setMenuForID(R.id.action_user_b);
+        } else if (userID != null && userID.equals(UserSettingsManager.USER_ID_C)) {
+            setMenuForID(R.id.action_user_c);
         }
 
         return super.onCreateOptionsMenu(menu);
