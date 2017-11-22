@@ -35,6 +35,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -413,7 +414,7 @@ public class MediaLoader {
             Bitmap image = BitmapFactory.decodeFile(imageFile.getAbsolutePath());
             image = fixImageOrientation(imageFile.getAbsolutePath(), image, false);
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            image.compress(Bitmap.CompressFormat.JPEG, 100, bos);
+            image.compress(Bitmap.CompressFormat.JPEG, 30, bos);
             return bos.toByteArray();
         }
 
