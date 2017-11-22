@@ -51,6 +51,7 @@ public class UserSettingsManager {
 
     public static final String USER_ID_A = "QSDU_1122334455";
     public static final String USER_ID_B = "QSDU_3944238293";
+    public static final String USER_ID_C = "QSDU_3256230077";
 
     public static String userPassPhrase;
 

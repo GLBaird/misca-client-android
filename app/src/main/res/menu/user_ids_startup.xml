@@ -12,6 +12,11 @@
         app:showAsAction="never"/>
 
     <item
+        android:id="@+id/action_user_c"
+        android:title="USER C"
+        app:showAsAction="never"/>
+
+    <item
         android:id="@+id/action_config_host"
         android:title="Config Server Address"
         app:showAsAction="never" />

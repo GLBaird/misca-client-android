@@ -29,7 +29,7 @@ public class StartupActivity extends Activity implements View.OnClickListener, Q
     Button reconnectButton;
     TextView infoText;
     ProgressBar spinner;
-    MenuItem item1, item2;
+    MenuItem item1, item2, item3;
     boolean firstLaunch = false;
 
     BroadcastReceiver receiver = new BroadcastReceiver() {
@@ -149,6 +149,8 @@ public class StartupActivity extends Activity implements View.OnClickListener, Q
                 item1 = menu.getItem(i);
             else if (menu.getItem(i).getItemId() == R.id.action_user_b)
                 item2 = menu.getItem(i);
+            else if (menu.getItem(i).getItemId() == R.id.action_user_c)
+                item3 = menu.getItem(i);
         }
 
         if (userID != null && userID.equals(UserSettingsManager.USER_ID_A)) {
@@ -172,6 +174,7 @@ public class StartupActivity extends Activity implements View.OnClickListener, Q
                 UserSettingsManager.setUserID(UserSettingsManager.USER_ID_A);
                 item1.setTitle("USER A **SELECTED");
                 item2.setTitle("USER B");
+                item3.setTitle("USER C");
                 updateUI();
                 return true;
 
@@ -179,6 +182,15 @@ public class StartupActivity extends Activity implements View.OnClickListener, Q
                 UserSettingsManager.setUserID(UserSettingsManager.USER_ID_B);
                 item1.setTitle("USER A");
                 item2.setTitle("USER B **SELECTED");
+                item3.setTitle("USER C");
+                updateUI();
+                return true;
+
+            case R.id.action_user_c:
+                UserSettingsManager.setUserID(UserSettingsManager.USER_ID_C);
+                item1.setTitle("USER A");
+                item2.setTitle("USER B");
+                item3.setTitle("USER C **SELECTED");
                 updateUI();
                 return true;
 
