@@ -191,7 +191,9 @@ public class MessageListFragment extends Fragment implements View.OnClickListene
             MessageContentProvider.addItem(
                     dm.addNewMessage(message, QMessageType.TEXT, group.getId(), messageSent.id, messageSent.from, new Date(messageSent.ts))
             );
-            adapter.notifyItemInserted(MessageContentProvider.ITEMS.size() - 1);
+            int position = MessageContentProvider.ITEMS.size() - 1;
+            adapter.notifyItemInserted(position);
+            recyclerView.scrollToPosition(position);
         } else {
             Toast.makeText(getContext(), "Failed to send message", Toast.LENGTH_SHORT)
                  .show();
